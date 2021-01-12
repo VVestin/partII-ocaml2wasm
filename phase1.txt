@@ -1,0 +1,36 @@
+Subject: Phase 1 - your surname: your proposed dissertation title
+
+Phase 1 Project Selection Status Report
+
+Name: Weston Metzler
+
+College: Homerton
+
+User Identifier: wm307
+
+Director of Studies: John Fawcett
+
+Please complete 1, 2 and 3 below.
+
+1. Please write 100 words on your current project ideas.
+
+WebAssembly is a relatively new instruction format created to allow web browsers to interpret assembly-like code.
+This has many advantages over JavaScript in the browser, as well as applications outside of the browser.
+My project idea is to create a compiler from OCaml to WebAssembly.
+OCaml is a multi-paradigm language with many features from functional, imperative, and object-oriented programming.
+To manage the scope of the project, a core subset of OCaml would be selected and a number of programs demonstrating those features would be created.
+Project success is then evaluated by compiling those programs and verifying the WebAssembly output has the desired behaviour.
+As an extension, support for features from the multi-core branch of OCaml could be added, allowing programs to use algebraic effect handlers and utilize modern CPUs more efficiently.
+
+2. Please list names of potential project supervisors.
+
+John Fawcett
+
+3. Is there any chance that your project will involve any
+computing resources other than the Computing Service's MCS and
+software that is already installed there, for example: your own
+machine, machines in College, special peripherals, imported
+software packages, special hardware, network access, substantial
+extra disc space on the MCS.
+
+If so indicate below what, and what it is needed for.
