@@ -54,7 +54,4 @@ if (require.main === module) {
    console.log(lex(process.argv[2]))
 }
 
-module.exports = {
-   lex,
-   KEYWORDS,
-}
+module.exports = lex
