@@ -16,7 +16,7 @@ const lex = src => {
    let num, identifier
    let tokens = []
    src.split('').forEach(char => {
-      console.log('state', state, 'char', JSON.stringify(char))
+      //console.log('state', state, 'char', JSON.stringify(char))
       if (state == 'NUMBER' && char.match(/\d/)) {
          num = num * 10 + Number(char)
          return

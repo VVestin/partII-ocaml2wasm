@@ -1,8 +1,11 @@
 {
-  "name": "learn",
+  "name": "ocaml-wasm",
   "version": "1.0.0",
-  "description": "",
-  "main": "test-wasm.js",
+  "description": "This is my dissertation, yo",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
