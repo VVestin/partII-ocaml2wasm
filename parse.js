@@ -13,7 +13,7 @@ const parse = tokens => {
       return popped
    }
    tokens.forEach(token => {
-      console.log(exprStack, opStack, token)
+      //console.log(exprStack, opStack, token)
       switch (token.type) {
          case 'NUMBER':
             exprStack.push(token)

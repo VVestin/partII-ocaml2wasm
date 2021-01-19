@@ -2,3 +2,4 @@
 *.wasm
 learn/node_modules/
 node_modules/
+test/__snapshots__
