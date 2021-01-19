@@ -1,10 +1,10 @@
-const PRECIDENCE = { '*': 2, '+': 1, '(': 0 }
+const PRECIDENCE = { '*': 2, '+': 1, '-': 1, '(': 0 }
 const parse = tokens => {
    const opStack = []
    const exprStack = []
    const popOp = () => {
       const popped = opStack.pop()
-      if (popped.type == 'INFIX')
+      if (popped.type == 'OPERATOR')
          exprStack.push({
             ...popped,
             rhs: exprStack.pop(),
@@ -18,7 +18,7 @@ const parse = tokens => {
          case 'NUMBER':
             exprStack.push(token)
             break
-         case 'INFIX':
+         case 'OPERATOR':
             while (
                opStack.length &&
                PRECIDENCE[opStack[opStack.length - 1].op] >=

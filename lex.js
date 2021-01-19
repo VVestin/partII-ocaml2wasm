@@ -10,8 +10,6 @@ const KEYWORDS = (
 
 const lex = src => {
    src += '\n'
-   console.log('lexing', src)
-
    let state = 'INIT'
    let num, identifier
    let tokens = []
@@ -33,7 +31,7 @@ const lex = src => {
          state = 'INIT'
       }
       if (char.match(/[=<>@^|&+\-*/$%]/)) {
-         tokens.push({ type: 'INFIX', op: char })
+         tokens.push({ type: 'OPERATOR', op: char })
       } else if (char.match(/\(|\)/)) {
          tokens.push({ type: 'KEYWORD', keyword: char })
       } else if (char.match(/\d/)) {
@@ -44,7 +42,7 @@ const lex = src => {
          state = 'IDENTIFIER'
       } else if (char.match(/\s/)) {
       } else {
-         console.log('UNRECOGNIZED')
+         throw new Error('Unrecognized character' + char)
       }
    })
    return tokens
