@@ -26,7 +26,12 @@ describe('Sample programs', function () {
    }
    ;[
       ['int-arith', 10],
-      //['float-arith', 6.75]
+      //['float-arith', 6.75],
+      //['bool-arith', true]
+      //['8th-power', 65536]
+      //['match', 35]
+      //['int-sqrt', 10]
+      //['fibonacci', 89]
    ].forEach(([sample, answer]) =>
       it(`gets the right anwser for sample ${sample}`, () =>
          expect(runSample(sample)).to.become(answer))
