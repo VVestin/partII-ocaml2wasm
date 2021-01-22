@@ -38,6 +38,29 @@ const inferTypes = ast => {
             `Type Error, op '${ast.op}' expected operands of type INT got ${ast.lhs.type} and ${ast.rhs.type}`
          )
       ast.type = 'FLOAT'
+   } else if (
+      ast.tokenName == 'INFIX_OP' &&
+      ['<', '<=', '>', '>=', '=', '!='].includes(ast.op)
+   ) {
+      inferTypes(ast.lhs)
+      inferTypes(ast.rhs)
+      if (ast.lhs.type != ast.rhs.type)
+         throw new Error(
+            `Type Error, op '${ast.op}' expected operands of same type got ${ast.lhs.type} and ${ast.rhs.type}`
+         )
+      if (!['INT', 'FLOAT', 'BOOL'].includes(ast.lhs.type))
+         throw new Error(
+            `Type Error, op '${ast.op}' only supports number types currently`
+         )
+      ast.type = 'BOOL'
+   } else if (ast.tokenName == 'INFIX_OP' && ['||', '&&'].includes(ast.op)) {
+      inferTypes(ast.lhs)
+      inferTypes(ast.rhs)
+      if (ast.lhs.type != 'BOOL' || ast.rhs.type != 'BOOL')
+         throw new Error(
+            `Type Error, op '${ast.op}' expected operands of type BOOL got ${ast.lhs.type} and ${ast.rhs.type}`
+         )
+      ast.type = 'BOOL'
    }
 }
 

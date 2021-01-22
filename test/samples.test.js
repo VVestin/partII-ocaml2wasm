@@ -27,7 +27,7 @@ describe('Sample programs', function () {
    ;[
       ['int-arith', 8],
       ['float-arith', -4.9375],
-      //['bool-arith', true]
+      ['bool-arith', 0],
       //['8th-power', 65536]
       //['match', 35]
       //['int-sqrt', 10]
