@@ -14,24 +14,25 @@ const KEYWORDS = (
 const grammar = fs.readFileSync('ocaml.jison')
 const parser = new jison.Parser(String(grammar))
 parser.yy.makeInfix = (op, lhs, rhs) => ({
-   type: 'INFIX_OP',
+   tokenName: 'INFIX_OP',
    op,
    lhs,
    rhs,
 })
 parser.yy.makeUnary = (op, operand) => ({
-   type: 'UNARY_OP',
+   tokenName: 'UNARY_OP',
    op,
    operand,
 })
 
 const prettyPrint = (prefix, tree) => {
-   if (tree.type == 'INT_LITERAL') console.log(prefix, tree.val)
-   else if (tree.type == 'FLOAT_LITERAL') console.log(prefix, tree.val + 'f')
-   else if (tree.type == 'UNARY_OP') {
+   if (tree.tokenName == 'INT_LITERAL') console.log(prefix, tree.val)
+   else if (tree.tokenName == 'FLOAT_LITERAL')
+      console.log(prefix, tree.val + 'f')
+   else if (tree.tokenName == 'UNARY_OP') {
       console.log(prefix, tree.op)
       prettyPrint(prefix + '--', tree.operand)
-   } else if (tree.type == 'INFIX_OP') {
+   } else if (tree.tokenName == 'INFIX_OP') {
       prettyPrint(prefix + '--', tree.lhs)
       console.log(prefix, tree.op)
       prettyPrint(prefix + '--', tree.rhs)

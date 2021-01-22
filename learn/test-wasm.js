@@ -15,6 +15,7 @@ const fs = require('fs')
    const wasm = instance.exports
 
    console.log('helloWorld()', instance.exports.helloWorld())
+   return
    const memory = new Uint32Array(wasm.memory.buffer, 0, 50 * 50)
 
    addPattern(

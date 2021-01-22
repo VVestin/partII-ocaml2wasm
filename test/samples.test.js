@@ -23,7 +23,7 @@ describe('Sample programs', function () {
       return wasm.main()
    }
    ;[
-      ['int-arith', 10],
+      ['int-arith', 8],
       //['float-arith', 6.75],
       //['bool-arith', true]
       //['8th-power', 65536]

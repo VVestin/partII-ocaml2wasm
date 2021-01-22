@@ -1,4 +1,5 @@
 const { parser, prettyPrint } = require('./parser')
+const inferTypes = require('./typer')
 const comp = require('./comp')
 
 const main = async () => {
@@ -7,6 +8,14 @@ const main = async () => {
    console.log('ast', ast)
    console.log()
    prettyPrint('', ast)
+
+   try {
+      inferTypes(ast)
+      console.log('type', ast.type)
+   } catch (e) {
+      console.error(e)
+      return
+   }
 
    // Compiling
    const wat = comp(ast)

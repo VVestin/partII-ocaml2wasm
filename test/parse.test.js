@@ -6,7 +6,7 @@ chai.use(chaiSnapshot)
 
 describe('Parser', function () {
    // TODO it fail to parse this?
-   it('parses an empty token list', function () {
-      parser.parse('')
+   it('parses int literals', function () {
+      expect(parser.parse('1')).to.eql({ tokenName: 'INT_LITERAL', val: 1 })
    })
 })
