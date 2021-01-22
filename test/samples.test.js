@@ -1,5 +1,4 @@
-const lex = require('../lex.js')
-const parse = require('../parse.js')
+const { parser } = require('../parser.js')
 const comp = require('../comp.js')
 
 const fs = require('fs')
@@ -9,9 +8,8 @@ const expect = chai.expect
 
 describe('Sample programs', function () {
    const runSample = async sampleName => {
-      const src = fs.readFileSync(`test/samples/${sampleName}.ml`)
-      const tokens = lex(src)
-      const ast = parse(tokens)
+      const src = String(fs.readFileSync(`test/samples/${sampleName}.ml`))
+      const ast = parser.parse(src)
       const wat = comp(ast)
 
       // Executing

@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "jison": "^0.4.18",
     "wabt": "^1.0.20"
   },
   "devDependencies": {

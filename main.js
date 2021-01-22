@@ -1,23 +1,9 @@
-const lex = require('./lex.js')
-const parse = require('./parse.js')
-const comp = require('./comp.js')
-
-const prettyPrint = (prefix, tree) => {
-   if (tree.type == 'NUMBER') console.log(prefix, tree.val)
-   else if (tree.type == 'INFIX') {
-      prettyPrint(prefix + '---', tree.lhs)
-      console.log(prefix, tree.op)
-      prettyPrint(prefix + '---', tree.rhs)
-   }
-}
+const { parser, prettyPrint } = require('./parser')
+const comp = require('./comp')
 
 const main = async () => {
-   // Lexing
-   const tokens = lex(process.argv[2])
-   console.log('tokens', tokens)
-
    // Parsing
-   const ast = parse(tokens)
+   const ast = parser.parse(process.argv[2])
    console.log('ast', ast)
    console.log()
    prettyPrint('', ast)
