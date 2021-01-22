@@ -6,14 +6,14 @@ const inferTypes = ast => {
       inferTypes(ast.operand)
       if (ast.operand.type != 'INT')
          throw new Error(
-            "Type Error, unary '-' expected type INT got" + ast.operand.type
+            "Type Error, unary '-' expected type INT got " + ast.operand.type
          )
       ast.type = 'INT'
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-.') {
       inferTypes(ast.operand)
       if (ast.operand.type != 'FLOAT')
          throw new Error(
-            "Type Error, unary '-.' expected type FLOAT got" + ast.operand.type
+            "Type Error, unary '-.' expected type FLOAT got " + ast.operand.type
          )
       ast.type = 'FLOAT'
    } else if (

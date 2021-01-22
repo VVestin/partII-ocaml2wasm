@@ -1,4 +1,5 @@
 const { parser } = require('../parser.js')
+const inferTypes = require('../typer.js')
 const comp = require('../comp.js')
 
 const fs = require('fs')
@@ -10,6 +11,7 @@ describe('Sample programs', function () {
    const runSample = async sampleName => {
       const src = String(fs.readFileSync(`test/samples/${sampleName}.ml`))
       const ast = parser.parse(src)
+      inferTypes(ast)
       const wat = comp(ast)
 
       // Executing
@@ -24,7 +26,7 @@ describe('Sample programs', function () {
    }
    ;[
       ['int-arith', 8],
-      //['float-arith', 6.75],
+      ['float-arith', -4.9375],
       //['bool-arith', true]
       //['8th-power', 65536]
       //['match', 35]
