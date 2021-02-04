@@ -29,12 +29,22 @@ const prettyPrint = (prefix, tree) => {
    if (tree.tokenName == 'INT_LITERAL') console.log(prefix, tree.val)
    else if (tree.tokenName == 'FLOAT_LITERAL')
       console.log(prefix, tree.val + 'f')
+   else if (tree.tokenName == 'IDENTIFIER') console.log(prefix, tree.id)
    else if (tree.tokenName == 'UNARY_OP') {
       console.log(prefix, tree.op)
       prettyPrint(prefix + '--', tree.operand)
    } else if (tree.tokenName == 'INFIX_OP') {
       prettyPrint(prefix + '--', tree.lhs)
       console.log(prefix, tree.op)
+      prettyPrint(prefix + '--', tree.rhs)
+   } else if (tree.tokenName == 'LET') {
+      console.log(prefix, 'LET')
+      prettyPrint(prefix + '--', tree.binding)
+      console.log(prefix, 'IN')
+      prettyPrint(prefix + '--', tree.expr)
+   } else if (tree.tokenName == 'BINDING') {
+      prettyPrint(prefix + '--', tree.lhs)
+      console.log(prefix, '=')
       prettyPrint(prefix + '--', tree.rhs)
    }
 }

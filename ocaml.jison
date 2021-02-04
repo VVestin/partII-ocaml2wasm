@@ -7,6 +7,7 @@
                            return 'FLOAT_LITERAL';
 "-"?[0-9][0-9_]*           return 'INT_LITERAL';
 "true"|"false"             return 'BOOL_LITERAL'
+"->"                       return '->';
 "+""."?                    return '+';
 "-""."?                    return '-';
 "*""."?                    return '*';
@@ -21,9 +22,16 @@
 ")"                        return ')';
 "&&"                       return '&&';
 "||"                       return '||';
+"let"                      return 'let';
+"in"                       return 'in';
+"end"                      return 'end';
+"fun"                      return 'fun';
+[a-zA-Z_][a-zA-Z_0-9']*    return 'ident';
 
 /lex
 
+%nonassoc 'in' 'fun'
+%left APP
 %left '||'
 %left '&&'
 %right '<' '<=' '>' '>=' '=' '!='
@@ -44,17 +52,29 @@ expr
       {$$ = {tokenName: 'FLOAT_LITERAL', val: Number(yytext)}}
    | BOOL_LITERAL
       {$$ = {tokenName: 'BOOL_LITERAL', val: yytext == 'true'}}
-   | expr '+' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '-' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '*' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '/' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '<' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '<=' expr           {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '>' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '>=' expr           {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '=' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '!=' expr            {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '&&' expr           {$$ = yy.makeInfix($2, $1, $3)}
-   | expr '||' expr           {$$ = yy.makeInfix($2, $1, $3)}
-   | '-' expr %prec UMINUS    {$$ = yy.makeUnary($1, $2)}
-   | '(' expr ')'             {$$ = $2};
+   | '(' expr ')'                {$$ = $2}
+   | 'let' let-binding 'in' expr {$$ = {tokenName: 'LET', binding: $2, body: $4}}
+   | expr '+' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '-' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '*' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '/' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '<' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '<=' expr              {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '>' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '>=' expr              {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '=' expr               {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '!=' expr              {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '&&' expr              {$$ = yy.makeInfix($2, $1, $3)}
+   | expr '||' expr              {$$ = yy.makeInfix($2, $1, $3)}
+   | '-' expr %prec UMINUS       {$$ = yy.makeUnary($1, $2)}
+   | id                          {$$ = $1}
+   | 'fun' pattern '->' expr     {$$ = {tokenName: 'FUNC', param: $2, body: $4}};
+   //| expr expr %prec APP;
+
+
+let-binding:
+     pattern '=' expr {$$ = {tokenName: 'BINDING', lhs: $1, rhs: $3}};
+
+pattern: id {$$ = $1};
+
+id: 'ident' {$$ = {tokenName: 'IDENTIFIER', id: $1}};

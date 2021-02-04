@@ -54,7 +54,8 @@ const comp = ast => {
       return `${comp(ast.lhs)}\n${comp(ast.rhs)}\n${
          COMPARISON_TO_WAT[ast.lhs.type][ast.op]
       }`
-   else throw new Error(`No handler for compiling ${ast.tokenName} node`)
+   else if (ast.tokenName == 'LET') {
+   } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
 }
 
 module.exports = ast => {

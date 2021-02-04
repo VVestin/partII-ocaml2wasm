@@ -10,12 +10,13 @@ const main = async () => {
    prettyPrint('', ast)
 
    try {
-      inferTypes(ast)
+      inferTypes(ast, {})
       console.log('type', ast.type)
    } catch (e) {
       console.error(e)
       return
    }
+   return
 
    // Compiling
    const wat = comp(ast)

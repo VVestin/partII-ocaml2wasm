@@ -11,7 +11,7 @@ describe('Sample programs', function () {
    const runSample = async sampleName => {
       const src = String(fs.readFileSync(`test/samples/${sampleName}.ml`))
       const ast = parser.parse(src)
-      inferTypes(ast)
+      inferTypes(ast, {})
       const wat = comp(ast)
 
       // Executing
