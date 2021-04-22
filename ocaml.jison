@@ -70,7 +70,7 @@ expr
 
    | 'let' let-binding 'in' expr {$$ = {tokenName: 'LET', binding: $2, body: $4}}
    | id                          {$$ = $1}
-   | 'fun' pattern '->' expr     {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
+   | 'fun' id '->' expr     {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
    | expr expr %prec APP         {$$ = {tokenName: 'APP', func: $1, arg: $2}};
 
 

@@ -1,77 +1,121 @@
-const inferTypes = (ast, ctx) => {
-   if (ast.tokenName == 'INT_LITERAL') ast.type = 'INT'
-   else if (ast.tokenName == 'FLOAT_LITERAL') ast.type = 'FLOAT'
-   else if (ast.tokenName == 'BOOL_LITERAL') ast.type = 'BOOL'
-   else if (ast.tokenName == 'IDENTIFIER') {
-      if (!ctx[ast.id])
+const INT = { type: 'INT' }
+const FLOAT = { type: 'FLOAT' }
+const BOOL = { type: 'BOOL' }
+
+UNARY_OP_TABLE = {
+   '-': { arg: 'INT', res: 'INT' },
+   '-.': { arg: 'FLOAT', res: 'FLOAT' },
+}
+INFIX_OP_TABLE = {
+   '+': { arg1: 'INT', arg2: 'INT', res: 'INT' },
+   '-': { arg1: 'INT', arg2: 'INT', res: 'INT' },
+   '*': { arg1: 'INT', arg2: 'INT', res: 'INT' },
+   '/': { arg1: 'INT', arg2: 'INT', res: 'INT' },
+   '+.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
+   '-.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
+   '*.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
+   '/.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
+   '&&': { arg1: 'BOOL', arg2: 'BOOL', res: 'BOOL' },
+   '||': { arg1: 'BOOL', arg2: 'BOOL', res: 'BOOL' },
+   '<': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+   '<=': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+   '>': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+   '>=': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+   '=': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+   '!=': { arg1: 'COMP', arg2: 'COMP', res: 'BOOL' },
+}
+
+const newTypeLabel = (() => {
+   let counter = 0
+   return () => 't' + counter++
+})()
+
+const inferTypes = ast => {
+   annotate(ast, {})
+   const constraints = constrain(ast)
+   console.log('constraints', constraints)
+}
+
+const annotate = (ast, tenv) => {
+   if (ast.tokenName == 'IDENTIFIER') {
+      if (!tenv[ast.id])
          throw new Error(`Unexpected Identifier ${ast.id} has not been defined`)
-      ast.type = ctx[ast.id]
-   } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
-      inferTypes(ast.operand, ctx)
-      if (ast.operand.type != 'INT')
-         throw new Error(
-            "Type Error, unary '-' expected type INT got " + ast.operand.type
-         )
-      ast.type = 'INT'
-   } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-.') {
-      inferTypes(ast.operand, ctx)
-      if (ast.operand.type != 'FLOAT')
-         throw new Error(
-            "Type Error, unary '-.' expected type FLOAT got " + ast.operand.type
-         )
-      ast.type = 'FLOAT'
-   } else if (
-      ast.tokenName == 'INFIX_OP' &&
-      ['+', '-', '*', '/'].includes(ast.op)
-   ) {
-      inferTypes(ast.lhs, ctx)
-      inferTypes(ast.rhs, ctx)
-      if (ast.lhs.type != 'INT' || ast.rhs.type != 'INT')
-         throw new Error(
-            `Type Error, op '${ast.op}' expected operands of type INT got ${ast.lhs.type} and ${ast.rhs.type}`
-         )
-      ast.type = 'INT'
-   } else if (
-      ast.tokenName == 'INFIX_OP' &&
-      ['+.', '-.', '*.', '/.'].includes(ast.op)
-   ) {
-      inferTypes(ast.lhs, ctx)
-      inferTypes(ast.rhs, ctx)
-      if (ast.lhs.type != 'FLOAT' || ast.rhs.type != 'FLOAT')
-         throw new Error(
-            `Type Error, op '${ast.op}' expected operands of type INT got ${ast.lhs.type} and ${ast.rhs.type}`
-         )
-      ast.type = 'FLOAT'
-   } else if (
-      ast.tokenName == 'INFIX_OP' &&
-      ['<', '<=', '>', '>=', '=', '!='].includes(ast.op)
-   ) {
-      inferTypes(ast.lhs, ctx)
-      inferTypes(ast.rhs, ctx)
-      if (ast.lhs.type != ast.rhs.type)
-         throw new Error(
-            `Type Error, op '${ast.op}' expected operands of same type got ${ast.lhs.type} and ${ast.rhs.type}`
-         )
-      if (!['INT', 'FLOAT', 'BOOL'].includes(ast.lhs.type))
-         throw new Error(
-            `Type Error, op '${ast.op}' only supports number types currently`
-         )
-      ast.type = 'BOOL'
-   } else if (ast.tokenName == 'INFIX_OP' && ['||', '&&'].includes(ast.op)) {
-      inferTypes(ast.lhs, ctx)
-      inferTypes(ast.rhs, ctx)
-      if (ast.lhs.type != 'BOOL' || ast.rhs.type != 'BOOL')
-         throw new Error(
-            `Type Error, op '${ast.op}' expected operands of type BOOL got ${ast.lhs.type} and ${ast.rhs.type}`
-         )
-      ast.type = 'BOOL'
-   } else if (ast.tokenName == 'LET') {
-      inferTypes(ast.binding.rhs, ctx)
-      inferTypes(ast.body, {
-         ...ctx,
-         [ast.binding.lhs.id]: ast.binding.rhs.type,
+      ast.type = tenv[ast.id]
+      return
+   }
+
+   ast.type = newTypeLabel()
+   if (ast.tokenName == 'UNARY_OP') {
+      annotate(ast.operand, tenv)
+   } else if (ast.tokenName == 'INFIX_OP') {
+      annotate(ast.lhs, tenv)
+      annotate(ast.rhs, tenv)
+   } else if (ast.tokenName == 'FUNC') {
+      const paramType = newTypeLabel()
+      annotate(ast.body, {
+         ...tenv,
+         [ast.param.id]: paramType,
       })
-      ast.type = ast.body.type
+      ast.param.type = paramType
+   } else if (ast.tokenName == 'APP') {
+      annotate(ast.func, tenv)
+      annotate(ast.arg, tenv)
+   } else if (
+      !['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(ast.tokenName)
+   ) {
+      throw new Error("Couldn't annotate token", ast)
+   }
+}
+
+const constrain = ast => {
+   console.log('constraining', ast.tokenName)
+   if (ast.tokenName == 'INT_LITERAL') return [{ a: ast.type, b: 'INT' }]
+   else if (ast.tokenName == 'FLOAT_LITERAL')
+      return [{ a: ast.type, b: 'FLOAT' }]
+   else if (ast.tokenName == 'BOOL_LITERAL') return [{ a: ast.type, b: 'BOOL' }]
+   else if (ast.tokenName == 'UNARY_OP') {
+      const opType = UNARY_OP_TABLE[ast.op]
+      return [
+         { a: ast.operand.type, b: UNARY_OP_TABLE[ast.op].arg },
+         { a: ast.type, b: UNARY_OP_TABLE[ast.op].res },
+         ...constrain(ast.operand),
+      ]
+   } else if (ast.tokenName == 'INFIX_OP') {
+      return [
+         { a: ast.lhs.type, b: INFIX_OP_TABLE[ast.op].arg1 },
+         { a: ast.rhs.type, b: INFIX_OP_TABLE[ast.op].arg2 },
+         { a: ast.type, b: INFIX_OP_TABLE[ast.op].res },
+         ...constrain(ast.lhs),
+         ...constrain(ast.rhs),
+      ]
+   } else if (ast.tokenName == 'FUNC') {
+      return [
+         {
+            a: ast.type,
+            b: {
+               type: 'FUNC',
+               fromType: ast.param.type,
+               toType: ast.body.type,
+            },
+         },
+         ...constrain(ast.body),
+      ]
+   } else if (ast.tokenName == 'APP') {
+      return [
+         {
+            a: ast.func.type,
+            b: { type: 'FUNC', fromType: ast.arg.type, toType: ast.type },
+         },
+         ...constrain(ast.func),
+         ...constrain(ast.arg),
+      ]
+   } else if (ast.tokenName == 'IDENTIFIER') return []
+   else throw new Error("Couldn't constrain token", ast.tokenName)
+}
+
+const solve = constraints => {
+   const solution = {}
+   for (let constraint of constraints) {
    }
 }
 

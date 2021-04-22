@@ -91,7 +91,7 @@ const comp = (ast, ctx) => {
             func.code +
             arg.code +
             `call $applyfunc_${TYPE_TO_WAT[ast.arg.type]}_${
-               TYPE_TO_WAT[ast.func.type] || 'i32'
+               TYPE_TO_WAT[ast.func.type]
             }\n`,
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
