@@ -53,7 +53,6 @@ expr
    | BOOL_LITERAL
       {$$ = {tokenName: 'BOOL_LITERAL', val: yytext == 'true'}}
    | '(' expr ')'                {$$ = $2}
-   | 'let' let-binding 'in' expr {$$ = {tokenName: 'LET', binding: $2, body: $4}}
    | expr '+' expr               {$$ = yy.makeInfix($2, $1, $3)}
    | expr '-' expr               {$$ = yy.makeInfix($2, $1, $3)}
    | expr '*' expr               {$$ = yy.makeInfix($2, $1, $3)}
@@ -67,9 +66,12 @@ expr
    | expr '&&' expr              {$$ = yy.makeInfix($2, $1, $3)}
    | expr '||' expr              {$$ = yy.makeInfix($2, $1, $3)}
    | '-' expr %prec UMINUS       {$$ = yy.makeUnary($1, $2)}
+
+
+   | 'let' let-binding 'in' expr {$$ = {tokenName: 'LET', binding: $2, body: $4}}
    | id                          {$$ = $1}
-   | 'fun' pattern '->' expr     {$$ = {tokenName: 'FUNC', param: $2, body: $4}};
-   //| expr expr %prec APP;
+   | 'fun' pattern '->' expr     {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
+   | expr expr %prec APP         {$$ = {tokenName: 'APP', func: $1, arg: $2}};
 
 
 let-binding:

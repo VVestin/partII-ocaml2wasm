@@ -1,12 +1,11 @@
 (module
   (memory $mem 1)
 
-  (func (result i32)
+  (func $helloWorld (export "helloWorld") (result i32)
         i32.const 5
         i32.const 2
         i32.sub
         )
-  (export "helloWorld" (func 0))
 
   (func $offsetFromCoordinate (param $x i32) (param $y i32) (result i32)
         local.get $y

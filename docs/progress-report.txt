@@ -1,0 +1,22 @@
+Weston Metzler (wm307@cam.ac.uk)
+Compiling OCaml to WebAssembly
+
+Supervisor: Dr John K Fawcett
+Director of Studies: Dr John K Fawcett
+Overseers: Pietro Lio, Jeremy Yallop
+
+The project is currently about half way finished, with approximately the first 5 milestones being completed.
+In the initial schedule, the first 6 milestones were set to be finished by now, and by my estimates the project is about 3 weeks behind schedule.
+The current state of the compiler is that it can successfully compile arithmetic expressions with int, float, and bool types and their operators.
+About a week of work has been done adding support for functions as well as let bindings and good progress has been made, but those features aren't quite finished.
+The remaining work is to finish implementing backend support for functions and then implement variant and tuple types.
+Once those features are implemented and tested, the development work is done and the rest of the project is evaluation, extensions, and writing the dissertation.
+An early difficulty in the project was the decision to change the planned implementation language of the compiler.
+The first steps of the project were to research OCaml and write sample programs described in the proposal, as well as to research WebAssembly and methods for executing WASM.
+After this research, I decided it made a lot of sense to implement the compiler in JavaScript because of the interoperability with WebAssembly, with JS programs being able to compile, verify, and execute WebAssembly very naturally.
+This gives advantages for writing and testing the compiler, and also allows the compiler to be run in browsers, which is the main target for WebAssembly and opens the compiler to additional use cases.
+So, the work that has been done so far writing and testing the compiler has all been in JavaScript, using the jison compiler tool instead of ocamllex and ocamlyacc.
+This hasn't changed the work of the project much or measurably affected the schedule.
+To address the fact that the project is 3 weeks behind schedule, utilizing slack time built in to the schedule as well as well as time devoted to extensions should be sufficient to bring the project back on track.
+The next 6 weeks from February 12 to March 26 was actually all scheduled for slack time and extensions, which is more than enough time to finish the core project.
+In summary, as of now I have not spent as much time on the project as I planned to, but there has been sufficient progress that I am still confident the project will be completed without too much difficulty.
