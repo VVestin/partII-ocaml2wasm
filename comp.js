@@ -31,10 +31,11 @@ const COMPARISON_TO_WAT = {
 }
 COMPARISON_TO_WAT.BOOL = COMPARISON_TO_WAT.INT
 
-const TYPE_TO_WAT = {
-   INT: 'i32',
-   FLOAT: 'f32',
-   BOOL: 'i32',
+const typeToWAT = t => {
+   if (t == 'INT') return 'i32'
+   else if (t == 'FLOAT') return 'f32'
+   else if (t == 'BOOL') return 'i32'
+   else if (t.type == 'FUNC') return 'i32'
 }
 
 const indent = code =>
@@ -45,11 +46,11 @@ const indent = code =>
 
 const comp = (ast, ctx) => {
    if (ast.tokenName == 'INT_LITERAL')
-      return { defs: '', code: `i32.const ${ast.val}\n` }
+      return { defs: {}, code: `i32.const ${ast.val}\n` }
    else if (ast.tokenName == 'FLOAT_LITERAL')
-      return { defs: '', code: `f32.const ${ast.val}\n` }
+      return { defs: {}, code: `f32.const ${ast.val}\n` }
    else if (ast.tokenName == 'BOOL_LITERAL')
-      return { defs: '', code: `i32.const ${+ast.val}\n` }
+      return { defs: {}, code: `i32.const ${+ast.val}\n` }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
       const op = comp(ast.operand, ctx)
       return {
@@ -68,35 +69,37 @@ const comp = (ast, ctx) => {
       const operatorCode =
          INFIX_TO_WAT[ast.op] || COMPARISON_TO_WAT[ast.lhs.type][ast.op]
       return {
-         defs: lhs.defs + rhs.defs,
+         defs: { ...lhs.defs, ...rhs.defs },
          code: lhs.code + rhs.code + operatorCode + '\n',
       }
    } else if (ast.tokenName == 'FUNC') {
       const expr = comp(ast.body, ctx)
       const labelNum = newLabel()
       return {
-         defs:
-            expr.defs +
-            `(func $func${labelNum} (type $func_${
-               TYPE_TO_WAT[ast.body.type]
-            })\n${indent(expr.code)})\n`,
+         defs: {
+            ...expr.defs,
+            ['func' +
+            labelNum]: `(func $func${labelNum} (param $env i32) (result ${typeToWAT(
+               ast.type.toType
+            )})\n${indent(expr.code)})\n`,
+         },
          code: `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))\n`,
       }
    } else if (ast.tokenName == 'APP') {
       const func = comp(ast.func, ctx)
       const arg = comp(ast.arg, ctx)
       return {
-         defs: func.defs + arg.defs,
+         defs: { ...func.defs, ...arg.defs },
          code:
             func.code +
             arg.code +
-            `call $applyfunc_${TYPE_TO_WAT[ast.arg.type]}_${
-               TYPE_TO_WAT[ast.func.type]
-            }\n`,
+            `call $applyfunc_${typeToWAT(ast.arg.type)}_${typeToWAT(
+               ast.func.type
+            )}\n`,
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
       return {
-         defs: '',
+         defs: {},
          code: '(i32.load (get_local $env))\n',
       }
    } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
@@ -147,10 +150,12 @@ const compile = ast => {
                      (i32.load (get_local $func)))
       )
 
-  (table 1 funcref)
-  (elem (i32.const 0) $func0)
-${indent(defs)}
-  (func $main (export "main") (result ${TYPE_TO_WAT[ast.type]})
+  (table funcref
+      (elem ${Object.keys(defs)
+         .map(func => '$' + func)
+         .join(' ')}))
+${Object.values(defs).map(indent).join('\n')}
+  (func $main (export "main") (result ${typeToWAT(ast.type)})
     (local $env i32)
 ${indent(indent(code))}
     )
