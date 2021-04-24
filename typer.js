@@ -34,6 +34,9 @@ const inferTypes = ast => {
    annotate(ast, {})
    const constraints = constrain(ast)
    console.log('constraints', constraints)
+   const types = solve(constraints)
+   console.log(types)
+   substitute(ast, types)
 }
 
 const annotate = (ast, tenv) => {
@@ -114,8 +117,91 @@ const constrain = ast => {
 }
 
 const solve = constraints => {
-   const solution = {}
+   let solution = {}
    for (let constraint of constraints) {
+      console.log('applying constraint', constraint)
+      console.log(
+         'updated constraint',
+         applySubstitutions(constraint, solution)
+      )
+      const substitutions = unify(applySubstitutions(constraint, solution))
+      console.log('got substitutions', substitutions)
+      // updating solution
+      for (let tvar of Object.keys(solution)) {
+         solution[tvar] = applySubstitutions(solution[tvar], substitutions)
+      }
+      for (let tvar of Object.keys(substitutions)) {
+         if (!solution[tvar]) solution[tvar] = substitutions[tvar]
+      }
+      console.log('')
+   }
+   return solution
+}
+
+const isTVar = t => {
+   return typeof t == 'string' && t.startsWith('t')
+}
+
+// takes a single constraint and returns a substitution that unifies the two sides of the contstraint
+const unify = constraint => {
+   if (
+      ['INT', 'FLOAT', 'BOOL'].includes(constraint.a) &&
+      constraint.a == constraint.b
+   ) {
+      return {} // no substitution since it's already a match
+   } else if (isTVar(constraint.a) && constraint.a == constraint.b) {
+      return {} // no substitution since it's already a match
+   } else if (constraint.a.type == 'FUNC' && constraint.b.type == 'FUNC') {
+      return {
+         ...unify({ a: constraint.a.fromType, b: constraint.b.fromType }),
+         ...unify({ a: constraint.a.toType, b: constraint.b.toType }),
+      }
+   } else if (isTVar(constraint.a)) {
+      return { [constraint.a]: constraint.b }
+   } else if (isTVar(constraint.b)) {
+      return { [constraint.b]: constraint.a }
+   } else
+      throw new Error(
+         `Can't unify ${JSON.stringify(constraint.a)} with ${JSON.stringify(
+            constraint.b
+         )}`
+      )
+}
+
+// applies a whole list of substitutions to a single type or a whole constraint, replacing type variables that have substitutions
+const applySubstitutions = (t, substitutions) => {
+   if (t.a)
+      return {
+         a: applySubstitutions(t.a, substitutions),
+         b: applySubstitutions(t.b, substitutions),
+      }
+   if (['INT', 'FLOAT', 'BOOL'].includes(t)) return t
+   else if (t.type == 'FUNC') {
+      return {
+         type: 'FUNC',
+         fromType: applySubstitutions(t.fromType, substitutions),
+         toType: applySubstitutions(t.toType, substitutions),
+      }
+   } else {
+      // t is a type var, so replace it if there's a substitution for it
+      if (substitutions[t]) return substitutions[t]
+      else return t
+   }
+}
+
+const substitute = (ast, substitutions) => {
+   ast.type = substitutions[ast.type]
+   if (ast.tokenName == 'UNARY_OP') {
+      substitute(ast.operand, substitutions)
+   } else if (ast.tokenName == 'INFIX_OP') {
+      substitute(ast.lhs, substitutions)
+      substitute(ast.rhs, substitutions)
+   } else if (ast.tokenName == 'FUNC') {
+      substitute(ast.param, substitutions)
+      substitute(ast.body, substitutions)
+   } else if (ast.tokenName == 'APP') {
+      substitute(ast.func, substitutions)
+      substitute(ast.arg, substitutions)
    }
 }
 

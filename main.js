@@ -31,7 +31,7 @@ const prettyPrint = (prefix, tree) => {
    } else if (tree.tokenName == 'FUNC') {
       console.log(prefix, 'FUNC', tree.type)
       prettyPrint(prefix + '--', tree.param)
-      console.log(prefix, 'BODY', tree.type)
+      console.log(prefix, 'BODY')
       prettyPrint(prefix + '--', tree.body)
    }
 }
