@@ -44,7 +44,7 @@ const indent = code =>
       .map(line => '  ' + line)
       .join('\n')
 
-const comp = (ast, ctx) => {
+const comp = (ast, ctx, depth) => {
    if (ast.tokenName == 'INT_LITERAL')
       return { defs: {}, code: `i32.const ${ast.val}\n` }
    else if (ast.tokenName == 'FLOAT_LITERAL')
@@ -52,20 +52,20 @@ const comp = (ast, ctx) => {
    else if (ast.tokenName == 'BOOL_LITERAL')
       return { defs: {}, code: `i32.const ${+ast.val}\n` }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
-      const op = comp(ast.operand, ctx)
+      const op = comp(ast.operand, ctx, depth)
       return {
          defs: op.defs,
          code: 'i32.const 0\n' + op.code + 'i32.sub\n',
       }
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-.') {
-      const op = comp(ast.operand, ctx)
+      const op = comp(ast.operand, ctx, depth)
       return {
          defs: op.defs,
          code: op.code + 'f32.neg\n',
       }
    } else if (ast.tokenName == 'INFIX_OP') {
-      const lhs = comp(ast.lhs, ctx)
-      const rhs = comp(ast.rhs, ctx)
+      const lhs = comp(ast.lhs, ctx, depth)
+      const rhs = comp(ast.rhs, ctx, depth)
       const operatorCode =
          INFIX_TO_WAT[ast.op] || COMPARISON_TO_WAT[ast.lhs.type][ast.op]
       return {
@@ -73,7 +73,7 @@ const comp = (ast, ctx) => {
          code: lhs.code + rhs.code + operatorCode + '\n',
       }
    } else if (ast.tokenName == 'FUNC') {
-      const expr = comp(ast.body, ctx)
+      const expr = comp(ast.body, { ...ctx, [ast.param.id]: depth }, depth + 1)
       const labelNum = newLabel()
       return {
          defs: {
@@ -86,8 +86,8 @@ const comp = (ast, ctx) => {
          code: `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))\n`,
       }
    } else if (ast.tokenName == 'APP') {
-      const func = comp(ast.func, ctx)
-      const arg = comp(ast.arg, ctx)
+      const func = comp(ast.func, ctx, depth)
+      const arg = comp(ast.arg, ctx, depth)
       return {
          defs: { ...func.defs, ...arg.defs },
          code:
@@ -98,10 +98,13 @@ const comp = (ast, ctx) => {
             )}\n`,
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
-      return {
-         defs: {},
-         code: '(i32.load (get_local $env))\n',
-      }
+      let code = `get_local $env ;; lookup ${ast.id}\n`
+      code += `;; ${ctx[ast.id]} - ${depth}\n`
+      // TODO, this traversal could be a WASM function instead of adding linear code
+      for (let i = 0; i < depth - 1 - ctx[ast.id]; i++)
+         code += 'i32.load offset=4\n'
+      code += 'i32.load\n'
+      return { defs: {}, code }
    } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
 }
 
@@ -111,7 +114,7 @@ const newLabel = (() => {
 })()
 
 const compile = ast => {
-   const { defs, code } = comp(ast, [])
+   const { defs, code } = comp(ast, {}, 0)
    return `
 (module
   (memory $heap (export "heap") 1)
