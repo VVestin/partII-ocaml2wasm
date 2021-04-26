@@ -32,4 +32,38 @@ if (require.main == module) {
    //prettyPrint('|', ast)
 }
 
-module.exports = parser
+const parse = input => {
+   const ast = parser.parse(input)
+   console.log(ast)
+   console.log('transformed', transformLet(ast))
+   return transformLet(ast)
+}
+
+const transformLet = ast => {
+   if (ast.tokenName == 'LET') {
+      return {
+         tokenName: 'APP',
+         func: {
+            tokenName: 'FUNC',
+            param: transformLet(ast.binding.lhs),
+            body: transformLet(ast.body),
+         },
+         arg: ast.binding.rhs,
+      }
+   } else if (ast.tokenName == 'INFIX_OP') {
+      return { ...ast, lhs: transformLet(ast.lhs), rhs: transformLet(ast.rhs) }
+   } else if (ast.tokenName == 'UNARY_OP') {
+      return { ...ast, operand: transformLet(ast.operand) }
+   } else if (ast.tokenName == 'APP') {
+      return {
+         ...ast,
+         func: transformLet(ast.func),
+         arg: transformLet(ast.arg),
+      }
+   } else if (ast.tokenName == 'FUNC') {
+      return { ...ast, body: transformLet(ast.body) }
+   }
+   return ast
+}
+
+module.exports = parse

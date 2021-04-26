@@ -71,7 +71,7 @@ const annotate = (ast, tenv) => {
 }
 
 const constrain = ast => {
-   console.log('constraining', ast.tokenName)
+   //console.log('constraining', ast.tokenName)
    if (ast.tokenName == 'INT_LITERAL') return [{ a: ast.type, b: 'INT' }]
    else if (ast.tokenName == 'FLOAT_LITERAL')
       return [{ a: ast.type, b: 'FLOAT' }]
@@ -119,13 +119,10 @@ const constrain = ast => {
 const solve = constraints => {
    let solution = {}
    for (let constraint of constraints) {
-      console.log('applying constraint', constraint)
-      console.log(
-         'updated constraint',
-         applySubstitutions(constraint, solution)
-      )
+      //console.log('applying constraint', constraint)
+      //console.log( 'updated constraint', applySubstitutions(constraint, solution))
       const substitutions = unify(applySubstitutions(constraint, solution))
-      console.log('got substitutions', substitutions)
+      //console.log('got substitutions', substitutions)
       // updating solution
       for (let tvar of Object.keys(solution)) {
          solution[tvar] = applySubstitutions(solution[tvar], substitutions)
@@ -133,7 +130,7 @@ const solve = constraints => {
       for (let tvar of Object.keys(substitutions)) {
          if (!solution[tvar]) solution[tvar] = substitutions[tvar]
       }
-      console.log('')
+      //console.log('')
    }
    return solution
 }

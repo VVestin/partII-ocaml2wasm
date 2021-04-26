@@ -1,4 +1,4 @@
-const parser = require('./parser')
+const parse = require('./parser')
 const inferTypes = require('./typer')
 const comp = require('./comp')
 
@@ -46,7 +46,7 @@ const prettyPrint = (prefix, tree) => {
 
 const main = async () => {
    // Parsing
-   const ast = parser.parse(process.argv[2])
+   const ast = parse(process.argv[2])
    console.log('DONE PARSING \n\n')
    console.log('ast', ast)
    console.log()

@@ -1,4 +1,4 @@
-const { parser } = require('../parser.js')
+const parse = require('../parser.js')
 const inferTypes = require('../typer.js')
 const comp = require('../comp.js')
 
@@ -10,7 +10,7 @@ const expect = chai.expect
 describe('Sample programs', function () {
    const runSample = async sampleName => {
       const src = String(fs.readFileSync(`test/samples/${sampleName}.ml`))
-      const ast = parser.parse(src)
+      const ast = parse(src)
       inferTypes(ast, {})
       const wat = comp(ast)
 
