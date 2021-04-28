@@ -58,16 +58,18 @@ const annotate = (ast, tenv) => {
       annotate(ast.body, {
          ...tenv,
          [ast.param.id]: paramType,
+         ...(ast.rec && { [ast.rec.id]: ast.type }),
       })
       ast.param.type = paramType
    } else if (ast.tokenName == 'APP') {
       annotate(ast.func, tenv)
       annotate(ast.arg, tenv)
+   } else if (ast.tokenName == 'TUPLE') {
+      for (let expr of ast.exprs) annotate(expr, tenv)
    } else if (
       !['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(ast.tokenName)
-   ) {
-      throw new Error("Couldn't annotate token", ast)
-   }
+   )
+      throw new Error("Couldn't annotate token " + JSON.stringify(ast))
 }
 
 const constrain = ast => {
@@ -112,8 +114,20 @@ const constrain = ast => {
          ...constrain(ast.func),
          ...constrain(ast.arg),
       ]
-   } else if (ast.tokenName == 'IDENTIFIER') return []
-   else throw new Error("Couldn't constrain token", ast.tokenName)
+   } else if (ast.tokenName == 'IDENTIFIER') {
+      return []
+   } else if (ast.tokenName == 'TUPLE') {
+      return [
+         {
+            a: ast.type,
+            b: {
+               type: 'TUPLE',
+               types: ast.exprs.map(expr => expr.type),
+            },
+         },
+         ...ast.exprs.map(expr => constrain(expr)).flat(),
+      ]
+   } else throw new Error("Couldn't constrain token " + JSON.stringify(ast))
 }
 
 const solve = constraints => {
@@ -153,6 +167,15 @@ const unify = constraint => {
          ...unify({ a: constraint.a.fromType, b: constraint.b.fromType }),
          ...unify({ a: constraint.a.toType, b: constraint.b.toType }),
       }
+   } else if (
+      constraint.a.type == 'TUPLE' &&
+      constraint.b.type == 'TUPLE' &&
+      a.types.length == b.types.length
+   ) {
+      return a.types.reduce(
+         (acc, atype, i) => ({ ...acc, ...unify(atype, b.types[i]) }),
+         {}
+      )
    } else if (isTVar(constraint.a)) {
       return { [constraint.a]: constraint.b }
    } else if (isTVar(constraint.b)) {
@@ -179,10 +202,17 @@ const applySubstitutions = (t, substitutions) => {
          fromType: applySubstitutions(t.fromType, substitutions),
          toType: applySubstitutions(t.toType, substitutions),
       }
-   } else {
+   } else if (t.type == 'TUPLE') {
+      return {
+         type: 'TUPLE',
+         types: t.types.map(type => applySubstitutions(type, substitutions)),
+      }
+   } else if (isTVar(t)) {
       // t is a type var, so replace it if there's a substitution for it
       if (substitutions[t]) return substitutions[t]
       else return t
+   } else {
+      throw new Error("Couldn't subsitute into type " + JSON.stringify(t))
    }
 }
 
@@ -199,7 +229,16 @@ const substitute = (ast, substitutions) => {
    } else if (ast.tokenName == 'APP') {
       substitute(ast.func, substitutions)
       substitute(ast.arg, substitutions)
-   }
+   } else if (ast.tokenName == 'TUPLE') {
+      ast.exprs.forEach(expr => substitute(expr, substitutions))
+   } else if (
+      !['IDENTIFIER', 'INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
+         ast.tokenName
+      )
+   )
+      throw new Error(
+         "Couldn't substitue types into token " + JSON.stringify(ast)
+      )
 }
 
 module.exports = inferTypes

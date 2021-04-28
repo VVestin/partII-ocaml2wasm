@@ -25,13 +25,6 @@ parser.yy.makeUnary = (op, operand) => ({
    operand,
 })
 
-if (require.main == module) {
-   const input = process.argv[2]
-   const ast = parser.parse(input)
-   console.log('ast', ast)
-   //prettyPrint('|', ast)
-}
-
 const parse = input => {
    const ast = parser.parse(input)
    console.log(ast)
@@ -41,15 +34,26 @@ const parse = input => {
 
 const transformLet = ast => {
    if (ast.tokenName == 'LET') {
-      return {
+      const token = {
          tokenName: 'APP',
          func: {
             tokenName: 'FUNC',
-            param: transformLet(ast.binding.lhs),
+            param: transformLet(ast.binding.id),
             body: transformLet(ast.body),
          },
-         arg: ast.binding.rhs,
+         arg: ast.binding.expr,
       }
+      let func = token.arg
+      for (let param of ast.binding.params) {
+         func = {
+            tokenName: 'FUNC',
+            param,
+            body: func,
+         }
+      }
+      if (ast.rec) func.rec = { id: ast.binding.id.id }
+      token.arg = func
+      return token
    } else if (ast.tokenName == 'INFIX_OP') {
       return { ...ast, lhs: transformLet(ast.lhs), rhs: transformLet(ast.rhs) }
    } else if (ast.tokenName == 'UNARY_OP') {
@@ -64,6 +68,14 @@ const transformLet = ast => {
       return { ...ast, body: transformLet(ast.body) }
    }
    return ast
+}
+
+if (require.main == module) {
+   const input = process.argv[2]
+   const ast = parser.parse(input)
+   console.log('ast', ast)
+   console.log('transformed', transformLet(ast))
+   //prettyPrint('|', ast)
 }
 
 module.exports = parse

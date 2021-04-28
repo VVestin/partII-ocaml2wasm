@@ -32,10 +32,12 @@ const COMPARISON_TO_WAT = {
 COMPARISON_TO_WAT.BOOL = COMPARISON_TO_WAT.INT
 
 const typeToWAT = t => {
-   if (t == 'INT') return 'i32'
-   else if (t == 'FLOAT') return 'f32'
+   if (t == 'FLOAT') return 'f32'
+   else if (t == 'INT') return 'i32'
    else if (t == 'BOOL') return 'i32'
    else if (t.type == 'FUNC') return 'i32'
+   else if (t.type == 'TUPLE') return 'i32'
+   else throw new Error('Unknown type' + JSON.stringify(t))
 }
 
 const indent = code =>
@@ -44,23 +46,25 @@ const indent = code =>
       .map(line => '  ' + line)
       .join('\n')
 
-const comp = (ast, ctx, depth) => {
+const comp = (ast, ctx = {}, depth = 0) => {
    if (ast.tokenName == 'INT_LITERAL')
-      return { defs: {}, code: `i32.const ${ast.val}\n` }
+      return { defs: {}, localDefs: '', code: `i32.const ${ast.val}\n` }
    else if (ast.tokenName == 'FLOAT_LITERAL')
-      return { defs: {}, code: `f32.const ${ast.val}\n` }
+      return { defs: {}, localDefs: '', code: `f32.const ${ast.val}\n` }
    else if (ast.tokenName == 'BOOL_LITERAL')
-      return { defs: {}, code: `i32.const ${+ast.val}\n` }
+      return { defs: {}, localDefs: '', code: `i32.const ${+ast.val}\n` }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
       const op = comp(ast.operand, ctx, depth)
       return {
          defs: op.defs,
+         localDefs: op.localDefs,
          code: 'i32.const 0\n' + op.code + 'i32.sub\n',
       }
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-.') {
       const op = comp(ast.operand, ctx, depth)
       return {
          defs: op.defs,
+         localDefs: op.localDefs,
          code: op.code + 'f32.neg\n',
       }
    } else if (ast.tokenName == 'INFIX_OP') {
@@ -70,26 +74,42 @@ const comp = (ast, ctx, depth) => {
          INFIX_TO_WAT[ast.op] || COMPARISON_TO_WAT[ast.lhs.type][ast.op]
       return {
          defs: { ...lhs.defs, ...rhs.defs },
+         localDefs: lhs.localDefs + rhs.localDefs,
          code: lhs.code + rhs.code + operatorCode + '\n',
       }
    } else if (ast.tokenName == 'FUNC') {
-      const expr = comp(ast.body, { ...ctx, [ast.param.id]: depth }, depth + 1)
-      const labelNum = newLabel()
+      const newDepth = ast.rec ? depth + 1 : depth
+      const expr = comp(
+         ast.body,
+         {
+            ...ctx,
+            [ast.param.id]: newDepth,
+            ...(ast.rec && { [ast.rec.id]: depth }),
+         },
+         newDepth + 1
+      )
+      const labelNum = newFuncLabel()
       return {
          defs: {
             ...expr.defs,
             ['func' +
             labelNum]: `(func $func${labelNum} (param $env i32) (result ${typeToWAT(
                ast.type.toType
-            )})\n${indent(expr.code)})\n`,
+            )})\n${indent(expr.localDefs.trim())}\n${indent(expr.code)})\n`,
          },
-         code: `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))\n`,
+         localDefs: '',
+         code: `(call $alloc_i32 (i32.const ${labelNum}) ${
+            ast.rec
+               ? `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))`
+               : '(get_local $env)'
+         })\n`,
       }
    } else if (ast.tokenName == 'APP') {
       const func = comp(ast.func, ctx, depth)
       const arg = comp(ast.arg, ctx, depth)
       return {
          defs: { ...func.defs, ...arg.defs },
+         localDefs: func.localDefs + arg.localDefs,
          code:
             func.code +
             arg.code +
@@ -104,17 +124,43 @@ const comp = (ast, ctx, depth) => {
       for (let i = 0; i < depth - 1 - ctx[ast.id]; i++)
          code += 'i32.load offset=4\n'
       code += 'i32.load\n'
-      return { defs: {}, code }
+      return { defs: {}, localDefs: '', code }
+   } else if (ast.tokenName == 'TUPLE') {
+      const exprs = ast.exprs.map(expr => comp(expr, ctx, depth))
+      const ptrVar = 'ptr' + newLocalLabel()
+      return {
+         defs: exprs.reduce((acc, expr) => ({ ...acc, ...expr.defs }), {}),
+         localDefs:
+            `(local $${ptrVar} i32)\n` +
+            exprs.map(expr => expr.localDefs).join(''),
+         code: `(tee_local $${ptrVar} (get_global $heap_ptr))
+(set_global $heap_ptr (i32.add (get_local $${ptrVar}) (i32.const ${
+            ast.exprs.length * 4
+         })))
+${exprs
+   .map(
+      (expr, i) =>
+         `;; storing tuple ${ptrVar} element ${i}
+${expr.code}${typeToWAT(ast.exprs[i].type)}.store offset=${4 * i}
+get_local $${ptrVar}\n`
+   )
+   .join('')}\n`,
+      }
    } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
 }
 
-const newLabel = (() => {
-   let counter = 0
-   return () => counter++
+const newFuncLabel = (() => {
+   let funcCounter = 0
+   return () => funcCounter++
+})()
+
+const newLocalLabel = (() => {
+   let localCounter = 0
+   return () => localCounter++
 })()
 
 const compile = ast => {
-   const { defs, code } = comp(ast, {}, 0)
+   const { defs, localDefs, code } = comp(ast)
    return `
 (module
   (memory $heap (export "heap") 1)
@@ -160,7 +206,8 @@ const compile = ast => {
 ${Object.values(defs).map(indent).join('\n')}
   (func $main (export "main") (result ${typeToWAT(ast.type)})
     (local $env i32)
-${indent(indent(code))}
+    ${indent(indent(localDefs)).trim()}
+    ${indent(indent(code)).trim()}
     )
 )`
 }

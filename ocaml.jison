@@ -8,6 +8,7 @@
 "-"?[0-9][0-9_]*           return 'INT_LITERAL';
 "true"|"false"             return 'BOOL_LITERAL'
 "->"                       return '->';
+","                        return ',';
 "+""."?                    return '+';
 "-""."?                    return '-';
 "*""."?                    return '*';
@@ -23,6 +24,7 @@
 "&&"                       return '&&';
 "||"                       return '||';
 "let"                      return 'let';
+"rec"                      return 'rec';
 "in"                       return 'in';
 "end"                      return 'end';
 "fun"                      return 'fun';
@@ -46,13 +48,23 @@
 start: expr {return $1};
 
 expr:
-   or-expr
+   tuple-expr
  | 'fun' pattern '->' expr
       {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
  | 'let' let-binding 'in' expr
-      {$$ = {tokenName: 'LET', binding: $2, body: $4}}
+      {$$ = {tokenName: 'LET', rec: false, binding: $2, body: $4}}
+ | 'let' 'rec' let-binding 'in' expr
+      {$$ = {tokenName: 'LET', rec: true, binding: $3, body: $5}}
    ;
 
+tuple-expr:
+   or-expr
+ | tuple-expr ',' or-expr
+      {$$ = {
+         tokenName: 'TUPLE',
+         exprs: $1.tokenName == 'TUPLE' ? $1.exprs.concat($3) : [$1, $3],
+      }}
+   ;
 or-expr:
    and-expr
  | or-expr '||' and-expr
@@ -66,34 +78,34 @@ and-expr:
    ;
 
 comparison-expr:
-   mult-expr
- | comparison-expr '<' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
- | comparison-expr '<=' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
- | comparison-expr '>' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
- | comparison-expr '>=' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
- | comparison-expr '=' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
- | comparison-expr '!=' mult-expr
-      {$$ = yy.makeInfix($2, $1, $3)}
-   ;
-
-mult-expr:
    add-expr
- | mult-expr '*' add-expr
+ | comparison-expr '<' add-expr
       {$$ = yy.makeInfix($2, $1, $3)}
- | mult-expr '/' add-expr
+ | comparison-expr '<=' add-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | comparison-expr '>' add-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | comparison-expr '>=' add-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | comparison-expr '=' add-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | comparison-expr '!=' add-expr
       {$$ = yy.makeInfix($2, $1, $3)}
    ;
 
 add-expr:
-   neg-expr
- | add-expr '+' neg-expr
+   mult-expr
+ | add-expr '+' mult-expr
       {$$ = yy.makeInfix($2, $1, $3)}
- | add-expr '-' neg-expr
+ | add-expr '-' mult-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+   ;
+
+mult-expr:
+   neg-expr
+ | mult-expr '*' neg-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | mult-expr '/' neg-expr
       {$$ = yy.makeInfix($2, $1, $3)}
    ;
 
@@ -110,19 +122,28 @@ app-expr:
    ;
 
 val-expr:
-   id
+ '(' expr ')'
+      {$$ = $2}
+ | id
  | INT_LITERAL
       {$$ = {tokenName: 'INT_LITERAL', val: Number(yytext)}}
  | FLOAT_LITERAL
       {$$ = {tokenName: 'FLOAT_LITERAL', val: Number(yytext)}}
  | BOOL_LITERAL
       {$$ = {tokenName: 'BOOL_LITERAL', val: yytext == 'true'}}
- | '(' expr ')'
-      {$$ = $2}
    ;
 
 let-binding:
-     pattern '=' expr {$$ = {tokenName: 'BINDING', lhs: $1, rhs: $3}};
+   id param-list '=' expr
+      {$$ = {tokenName: 'BINDING', id: $1, params: $2, expr: $4}}
+   ;
+
+param-list:
+   %empty
+      {$$ = []}
+ | id param-list
+      {$$ = [...$2, $1]}
+   ;
 
 pattern: id {$$ = $1};
 

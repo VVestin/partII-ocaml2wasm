@@ -6,6 +6,8 @@ const prettyType = t => {
    if (!t) return ''
    if (t.type == 'FUNC')
       return `(${prettyType(t.fromType)} -> ${prettyType(t.toType)})`
+   if (t.type == 'TUPLE')
+      return `(${t.types.map(type => prettyType(type)).join(' * ')})`
    else return t
 }
 
@@ -41,7 +43,19 @@ const prettyPrint = (prefix, tree) => {
       prettyPrint(prefix + '--', tree.param)
       console.log(prefix, 'BODY')
       prettyPrint(prefix + '--', tree.body)
+   } else if (tree.tokenName == 'TUPLE') {
+      console.log(prefix, 'TUPLE', prettyType(tree.type))
+      tree.exprs.forEach(expr => prettyPrint(prefix + '--', expr))
    }
+}
+
+const extract = (val, t, memory) => {
+   if (t == 'INT') return val
+   else if (t == 'BOOL') return Boolean(val)
+   else if (t.type == 'TUPLE')
+      return t.types.map((type, i) =>
+         extract(memory[Math.floor(val / 4) + i], type, memory)
+      )
 }
 
 const main = async () => {
@@ -75,8 +89,11 @@ const main = async () => {
    ).instance
 
    const wasm = instance.exports
+   const memory = new Uint32Array(wasm.heap.buffer, 0, 50)
 
-   console.log('main', wasm.main())
+   const output = wasm.main()
+   console.log('main', output, ':', prettyType(ast.type))
+   console.log('extracted', extract(output, ast.type, memory))
 }
 
 main()
