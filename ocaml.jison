@@ -23,6 +23,9 @@
 ")"                        return ')';
 "&&"                       return '&&';
 "||"                       return '||';
+"if"                       return 'if';
+"then"                     return 'then';
+"else"                     return 'else';
 "let"                      return 'let';
 "rec"                      return 'rec';
 "in"                       return 'in';
@@ -48,13 +51,19 @@
 start: expr {return $1};
 
 expr:
-   tuple-expr
+   if-expr
  | 'fun' pattern '->' expr
       {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
  | 'let' let-binding 'in' expr
       {$$ = {tokenName: 'LET', rec: false, binding: $2, body: $4}}
  | 'let' 'rec' let-binding 'in' expr
       {$$ = {tokenName: 'LET', rec: true, binding: $3, body: $5}}
+   ;
+
+if-expr:
+   tuple-expr
+ | 'if' if-expr 'then' if-expr 'else' or-expr
+      {$$ = {tokenName: 'IF', cond: $2, then: $4, else: $6}}
    ;
 
 tuple-expr:

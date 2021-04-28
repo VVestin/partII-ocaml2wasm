@@ -18,6 +18,7 @@ const fs = require('fs')
    for (let i = 0; i < 50; i++) memory[i] = i
 
    console.log('test():', wasm.test())
+   console.log('test2():', wasm.test2())
 
    console.log(memory)
 })()

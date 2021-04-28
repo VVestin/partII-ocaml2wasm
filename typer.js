@@ -66,6 +66,10 @@ const annotate = (ast, tenv) => {
       annotate(ast.arg, tenv)
    } else if (ast.tokenName == 'TUPLE') {
       for (let expr of ast.exprs) annotate(expr, tenv)
+   } else if (ast.tokenName == 'IF') {
+      annotate(ast.cond, tenv)
+      annotate(ast.then, tenv)
+      annotate(ast.else, tenv)
    } else if (
       !['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(ast.tokenName)
    )
@@ -126,6 +130,15 @@ const constrain = ast => {
             },
          },
          ...ast.exprs.map(expr => constrain(expr)).flat(),
+      ]
+   } else if (ast.tokenName == 'IF') {
+      return [
+         { a: ast.cond.type, b: 'BOOL' },
+         { a: ast.then.type, b: ast.else.type },
+         { a: ast.type, b: ast.then.type },
+         ...constrain(ast.cond),
+         ...constrain(ast.then),
+         ...constrain(ast.else),
       ]
    } else throw new Error("Couldn't constrain token " + JSON.stringify(ast))
 }
@@ -231,6 +244,10 @@ const substitute = (ast, substitutions) => {
       substitute(ast.arg, substitutions)
    } else if (ast.tokenName == 'TUPLE') {
       ast.exprs.forEach(expr => substitute(expr, substitutions))
+   } else if (ast.tokenName == 'IF') {
+      substitute(ast.cond, substitutions)
+      substitute(ast.then, substitutions)
+      substitute(ast.else, substitutions)
    } else if (
       !['IDENTIFIER', 'INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
          ast.tokenName

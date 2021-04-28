@@ -52,7 +52,11 @@ const comp = (ast, ctx = {}, depth = 0) => {
    else if (ast.tokenName == 'FLOAT_LITERAL')
       return { defs: {}, localDefs: '', code: `f32.const ${ast.val}\n` }
    else if (ast.tokenName == 'BOOL_LITERAL')
-      return { defs: {}, localDefs: '', code: `i32.const ${+ast.val}\n` }
+      return {
+         defs: {},
+         localDefs: '',
+         code: `i32.const ${+ast.val} ;; BOOL ${ast.val}\n`,
+      }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
       const op = comp(ast.operand, ctx, depth)
       return {
@@ -145,6 +149,23 @@ ${expr.code}${typeToWAT(ast.exprs[i].type)}.store offset=${4 * i}
 get_local $${ptrVar}\n`
    )
    .join('')}\n`,
+      }
+   } else if (ast.tokenName == 'IF') {
+      const cond = comp(ast.cond, ctx, depth)
+      const then = comp(ast.then, ctx, depth)
+      const elze = comp(ast.else, ctx, depth) // elze since else is a js keyword :(
+
+      return {
+         defs: { ...cond.defs, ...then.defs, ...elze.defs },
+         localDefs: cond.localDefs + then.localDefs + elze.localDefs,
+         code: `${cond.code}(if (result ${typeToWAT(ast.type)})
+(then
+  ${indent(then.code.trim())}
+    )
+  (else
+  ${indent(elze.code.trim())}
+    )
+  )`,
       }
    } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
 }

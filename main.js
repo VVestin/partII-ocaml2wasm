@@ -11,42 +11,50 @@ const prettyType = t => {
    else return t
 }
 
-const prettyPrint = (prefix, tree) => {
-   if (tree.tokenName == 'INT_LITERAL')
-      console.log(prefix, tree.val, prettyType(tree.type))
-   else if (tree.tokenName == 'FLOAT_LITERAL')
-      console.log(prefix, tree.val + 'f', prettyType(tree.type))
-   else if (tree.tokenName == 'IDENTIFIER')
-      console.log(prefix, tree.id, prettyType(tree.type))
-   else if (tree.tokenName == 'UNARY_OP') {
-      console.log(prefix, tree.op, prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.operand)
-   } else if (tree.tokenName == 'INFIX_OP') {
-      prettyPrint(prefix + '--', tree.lhs)
-      console.log(prefix, tree.op, prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.rhs)
-   } else if (tree.tokenName == 'LET') {
-      console.log(prefix, 'LET', prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.binding)
+const prettyPrint = (prefix, ast) => {
+   if (ast.tokenName == 'INT_LITERAL' || ast.tokenName == 'BOOL_LITERAL')
+      console.log(prefix, ast.val, prettyType(ast.type))
+   else if (ast.tokenName == 'FLOAT_LITERAL')
+      console.log(prefix, ast.val + 'f', prettyType(ast.type))
+   else if (ast.tokenName == 'IDENTIFIER')
+      console.log(prefix, ast.id, prettyType(ast.type))
+   else if (ast.tokenName == 'UNARY_OP') {
+      console.log(prefix, ast.op, prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.operand)
+   } else if (ast.tokenName == 'INFIX_OP') {
+      prettyPrint(prefix + '--', ast.lhs)
+      console.log(prefix, ast.op, prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.rhs)
+   } else if (ast.tokenName == 'LET') {
+      console.log(prefix, 'LET', prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.binding)
       console.log(prefix, 'IN')
-      prettyPrint(prefix + '--', tree.expr)
-   } else if (tree.tokenName == 'BINDING') {
-      prettyPrint(prefix + '--', tree.lhs)
-      console.log(prefix, '=', prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.rhs)
-   } else if (tree.tokenName == 'APP') {
-      prettyPrint(prefix + '--', tree.func)
-      console.log(prefix, 'APP', prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.arg)
-   } else if (tree.tokenName == 'FUNC') {
-      console.log(prefix, 'FUNC', prettyType(tree.type))
-      prettyPrint(prefix + '--', tree.param)
+      prettyPrint(prefix + '--', ast.expr)
+   } else if (ast.tokenName == 'BINDING') {
+      prettyPrint(prefix + '--', ast.lhs)
+      console.log(prefix, '=', prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.rhs)
+   } else if (ast.tokenName == 'APP') {
+      prettyPrint(prefix + '--', ast.func)
+      console.log(prefix, 'APP', prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.arg)
+   } else if (ast.tokenName == 'FUNC') {
+      console.log(prefix, 'FUNC', prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.param)
       console.log(prefix, 'BODY')
-      prettyPrint(prefix + '--', tree.body)
-   } else if (tree.tokenName == 'TUPLE') {
-      console.log(prefix, 'TUPLE', prettyType(tree.type))
-      tree.exprs.forEach(expr => prettyPrint(prefix + '--', expr))
-   }
+      prettyPrint(prefix + '--', ast.body)
+   } else if (ast.tokenName == 'TUPLE') {
+      console.log(prefix, 'TUPLE', prettyType(ast.type))
+      ast.exprs.forEach(expr => prettyPrint(prefix + '--', expr))
+   } else if (ast.tokenName == 'IF') {
+      console.log(prefix, 'IF', prettyType(ast.type))
+      prettyPrint(prefix + '--', ast.cond)
+      console.log(prefix, 'THEN')
+      prettyPrint(prefix + '--', ast.then)
+      console.log(prefix, 'ELSE')
+      prettyPrint(prefix + '--', ast.else)
+   } else
+      throw new Error("Can't pretty print unknown token " + JSON.stringify(ast))
 }
 
 const extract = (val, t, memory) => {

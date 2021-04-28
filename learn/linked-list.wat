@@ -52,4 +52,15 @@
         i32.load offset=4
         ;;(call $applyfunc_i32_i32 (get_local $c1) (i32.const 10))
         )
+  (func $test2 (export "test2") (result i32)
+        i32.const 0
+        (if (result i32)
+          (then
+            i32.const 10
+            )
+          (else
+            i32.const 20
+            )
+          )
+        )
   )

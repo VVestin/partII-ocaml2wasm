@@ -66,7 +66,19 @@ const transformLet = ast => {
       }
    } else if (ast.tokenName == 'FUNC') {
       return { ...ast, body: transformLet(ast.body) }
-   }
+   } else if (ast.tokenName == 'IF') {
+      return {
+         ...ast,
+         cond: transformLet(ast.cond),
+         then: transformLet(ast.then),
+         else: transformLet(ast.else),
+      }
+   } else if (
+      !['IDENTIFIER', 'INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
+         ast.tokenName
+      )
+   )
+      throw new Error('Transforming unknown token ' + JSON.stringify(ast))
    return ast
 }
 
