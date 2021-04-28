@@ -7,7 +7,7 @@
   (table 1 funcref)
   (elem (i32.const 0) $foo)
 
-  (func $foo (type $func_i32)
+  (func $foo (param $env i32) (result i32)
         i32.const 13)
 
   (func $alloc_i32 (param $val i32) (param $next i32) (result i32)
@@ -47,6 +47,9 @@
         (local $c1 i32)
         (set_local $c1 (call $alloc_i32
               (i32.const 0) (i32.const 0)))
-        (call $applyfunc_i32_i32 (get_local $c1) (i32.const 10))
+        i32.const 28
+        i32.load offset=4
+        i32.load offset=4
+        ;;(call $applyfunc_i32_i32 (get_local $c1) (i32.const 10))
         )
   )

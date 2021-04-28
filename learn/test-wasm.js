@@ -15,6 +15,7 @@ const fs = require('fs')
    const wasm = instance.exports
 
    const memory = new Uint32Array(wasm.heap.buffer, 0, 50)
+   for (let i = 0; i < 50; i++) memory[i] = i
 
    console.log('test():', wasm.test())
 
