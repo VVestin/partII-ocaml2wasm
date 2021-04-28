@@ -47,6 +47,7 @@ const indent = code =>
       .join('\n')
 
 const comp = (ast, ctx = {}, depth = 0) => {
+   console.log('compiling', ast.tokenName, ctx, depth)
    if (ast.tokenName == 'INT_LITERAL')
       return { defs: {}, localDefs: '', code: `i32.const ${ast.val}\n` }
    else if (ast.tokenName == 'FLOAT_LITERAL')
@@ -87,8 +88,11 @@ const comp = (ast, ctx = {}, depth = 0) => {
          ast.body,
          {
             ...ctx,
+            $rec: {
+               ...ctx.$rec,
+               ...(ast.rec && { [ast.rec.id]: depth }),
+            },
             [ast.param.id]: newDepth,
-            ...(ast.rec && { [ast.rec.id]: depth }),
          },
          newDepth + 1
       )
@@ -99,14 +103,13 @@ const comp = (ast, ctx = {}, depth = 0) => {
             ['func' +
             labelNum]: `(func $func${labelNum} (param $env i32) (result ${typeToWAT(
                ast.type.toType
-            )})\n${indent(expr.localDefs.trim())}\n${indent(expr.code)})\n`,
+            )})
+${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
          },
          localDefs: '',
-         code: `(call $alloc_i32 (i32.const ${labelNum}) ${
-            ast.rec
-               ? `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))`
-               : '(get_local $env)'
-         })\n`,
+         code: `(call $alloc_i32 (i32.const ${labelNum}) (get_local $env))\n${
+            ast.rec ? 'call $add_rec_to_env\n' : ''
+         }`,
       }
    } else if (ast.tokenName == 'APP') {
       const func = comp(ast.func, ctx, depth)
@@ -122,12 +125,18 @@ const comp = (ast, ctx = {}, depth = 0) => {
             )}\n`,
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
+      if (ctx[ast.id] === undefined && ctx.$rec[ast.id] === undefined)
+         throw new Error(`Unable to resolve identifier ${ast.id}`)
+      const varDepth =
+         ctx[ast.id] !== undefined ? ctx[ast.id] : ctx.$rec[ast.id]
+      console.log('varDepth', varDepth, ast.id, ctx[ast.id], ctx.$rec[ast.id])
       let code = `get_local $env ;; lookup ${ast.id}\n`
-      code += `;; ${ctx[ast.id]} - ${depth}\n`
+      code += `;; ${varDepth} - ${depth}\n`
       // TODO, this traversal could be a WASM function instead of adding linear code
-      for (let i = 0; i < depth - 1 - ctx[ast.id]; i++)
+      for (let i = 0; i < depth - 1 - varDepth; i++)
          code += 'i32.load offset=4\n'
-      code += 'i32.load\n'
+      if (ctx.$rec[ast.id] !== undefined) code += 'call $add_rec_to_env\n'
+      else code += 'i32.load\n'
       return { defs: {}, localDefs: '', code }
    } else if (ast.tokenName == 'TUPLE') {
       const exprs = ast.exprs.map(expr => comp(expr, ctx, depth))
@@ -159,13 +168,13 @@ get_local $${ptrVar}\n`
          defs: { ...cond.defs, ...then.defs, ...elze.defs },
          localDefs: cond.localDefs + then.localDefs + elze.localDefs,
          code: `${cond.code}(if (result ${typeToWAT(ast.type)})
-(then
-  ${indent(then.code.trim())}
+  (then
+${indent(indent(then.code.trim()))}
     )
   (else
-  ${indent(elze.code.trim())}
+${indent(indent(elze.code.trim()))}
     )
-  )`,
+  )\n`,
       }
    } else throw new Error(`No handler for compiling ${ast.tokenName} node`)
 }
@@ -184,6 +193,12 @@ const compile = ast => {
    const { defs, localDefs, code } = comp(ast)
    return `
 (module
+  (func $print1 (import "imports" "print") (param i32))
+  (func $print2 (import "imports" "print") (param i32 i32))
+  (func $print3 (import "imports" "print") (param i32 i32 i32))
+  (func $print4 (import "imports" "print") (param i32 i32 i32 i32))
+  (func $print5 (import "imports" "print") (param i32 i32 i32 i32 i32))
+
   (memory $heap (export "heap") 1)
   (global $heap_ptr (mut i32) (i32.const 4)) ;; start 1 byte in so 0 can be a null pointer
   (type $func_i32 (func (param i32) (result i32)))
@@ -219,6 +234,9 @@ const compile = ast => {
                      (call $alloc_i32 (get_local $arg) (i32.load offset=4 (get_local $func)))
                      (i32.load (get_local $func)))
       )
+  (func $add_rec_to_env (param $env i32) (result i32)
+      (call $alloc_i32 (i32.load (get_local $env)) (get_local $env))
+      )
 
   (table funcref
       (elem ${Object.keys(defs)
@@ -227,8 +245,7 @@ const compile = ast => {
 ${Object.values(defs).map(indent).join('\n')}
   (func $main (export "main") (result ${typeToWAT(ast.type)})
     (local $env i32)
-    ${indent(indent(localDefs)).trim()}
-    ${indent(indent(code)).trim()}
+    ${indent(indent(localDefs)).trim()}${indent(indent(code)).trim()}
     )
 )`
 }
