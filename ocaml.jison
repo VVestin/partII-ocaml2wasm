@@ -68,7 +68,7 @@ expr:
  | 'let' 'rec' let-binding 'in' expr
       {$$ = {tokenName: 'LET', rec: true, binding: $3, body: $5}}
  | 'match' expr 'with' pattern-matching
-      {$$ = {tokenName: 'MATCH', expr: $2, patterns: $4}}
+      {$$ = {tokenName: 'MATCH', expr: $2, clauses: $4}}
    ;
 
 if-expr:
