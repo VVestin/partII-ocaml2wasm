@@ -66,6 +66,8 @@ const transformLet = ast => {
       }
    } else if (ast.tokenName == 'FUNC') {
       return { ...ast, body: transformLet(ast.body) }
+   } else if (ast.tokenName == 'TUPLE') {
+      return { ...ast, exprs: ast.exprs.map(transformLet) }
    } else if (ast.tokenName == 'IF') {
       return {
          ...ast,
@@ -86,7 +88,7 @@ if (require.main == module) {
    const input = process.argv[2]
    const ast = parser.parse(input)
    console.log('ast', ast)
-   console.log('transformed', transformLet(ast))
+   //console.log('transformed', transformLet(ast))
    //prettyPrint('|', ast)
 }
 
