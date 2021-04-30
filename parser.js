@@ -98,14 +98,27 @@ const transformMatch = ast => {
 
 const unifyPattern = (pattern, matcher) => {
    if (pattern.tokenName == 'IDENTIFIER')
-      return { checks: [], decls: [{ id: pattern, expr: matcher }] }
-   else if (pattern.tokenName == 'INT_LITERAL')
+      return { checks: [], decls: [{ id: pattern, expr: { ...matcher } }] }
+   else if (
+      ['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
+         pattern.tokenName
+      )
+   )
       return {
          checks: [
-            { tokenName: 'INFIX_OP', op: '=', lhs: matcher, rhs: pattern },
+            {
+               tokenName: 'INFIX_OP',
+               op: '=',
+               lhs: { ...matcher },
+               rhs: pattern,
+            },
          ],
          decls: [],
       }
+   else
+      throw new Error(
+         "Can't unify unknown pattern type " + JSON.stringify(pattern)
+      )
 }
 
 const newLabel = (() => {

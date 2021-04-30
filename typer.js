@@ -71,7 +71,9 @@ const annotate = (ast, tenv) => {
       annotate(ast.then, tenv)
       annotate(ast.else, tenv)
    } else if (
-      !['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(ast.tokenName)
+      !['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL', 'ERROR'].includes(
+         ast.tokenName
+      )
    )
       throw new Error("Couldn't annotate token " + JSON.stringify(ast))
 }
@@ -94,6 +96,7 @@ const constrain = ast => {
          { a: ast.lhs.type, b: INFIX_OP_TABLE[ast.op].arg1 },
          { a: ast.rhs.type, b: INFIX_OP_TABLE[ast.op].arg2 },
          { a: ast.type, b: INFIX_OP_TABLE[ast.op].res },
+         { a: ast.lhs.type, b: ast.rhs.type },
          ...constrain(ast.lhs),
          ...constrain(ast.rhs),
       ]
@@ -140,16 +143,24 @@ const constrain = ast => {
          ...constrain(ast.then),
          ...constrain(ast.else),
       ]
+   } else if (ast.tokenName == 'ERROR') {
+      return [{ a: ast.type, b: 'ANY' }]
    } else throw new Error("Couldn't constrain token " + JSON.stringify(ast))
 }
 
 const solve = constraints => {
    let solution = {}
+   constraints = constraints.filter(({ a, b }) => !['COMP', 'ANY'].includes(b))
+   console.log('constraints without COMP', constraints)
    for (let constraint of constraints) {
-      //console.log('applying constraint', constraint)
-      //console.log( 'updated constraint', applySubstitutions(constraint, solution))
+      console.log('solution', solution)
+      console.log('applying constraint', constraint)
+      console.log(
+         'updated constraint',
+         applySubstitutions(constraint, solution)
+      )
       const substitutions = unify(applySubstitutions(constraint, solution))
-      //console.log('got substitutions', substitutions)
+      console.log('got substitutions', substitutions)
       // updating solution
       for (let tvar of Object.keys(solution)) {
          solution[tvar] = applySubstitutions(solution[tvar], substitutions)
@@ -157,7 +168,13 @@ const solve = constraints => {
       for (let tvar of Object.keys(substitutions)) {
          if (!solution[tvar]) solution[tvar] = substitutions[tvar]
       }
-      //console.log('')
+      /*for (let tvar of Object.keys(substitutions)) {
+         const newType = solution[tvar]
+            ? applySubstitutions(solution[tvar], substitutions)
+            : substitutions[tvar]
+         solution[tvar] = newType
+      }*/
+      console.log('')
    }
    return solution
 }
@@ -167,37 +184,36 @@ const isTVar = t => {
 }
 
 // takes a single constraint and returns a substitution that unifies the two sides of the contstraint
-const unify = constraint => {
-   if (
-      ['INT', 'FLOAT', 'BOOL'].includes(constraint.a) &&
-      constraint.a == constraint.b
-   ) {
+const unify = ({ a, b }) => {
+   if (a == 'ANY' || b == 'ANY') {
+      return {}
+   } else if (['INT', 'FLOAT', 'BOOL'].includes(a) && (a == b || b == 'COMP')) {
       return {} // no substitution since it's already a match
-   } else if (isTVar(constraint.a) && constraint.a == constraint.b) {
+   } else if (a == 'COMP' && ['INT', 'FLOAT', 'BOOL', 'COMP'].includes(b)) {
       return {} // no substitution since it's already a match
-   } else if (constraint.a.type == 'FUNC' && constraint.b.type == 'FUNC') {
+   } else if (isTVar(a) && a == b) {
+      return {} // no substitution since it's already a match
+   } else if (a.type == 'FUNC' && b.type == 'FUNC') {
       return {
-         ...unify({ a: constraint.a.fromType, b: constraint.b.fromType }),
-         ...unify({ a: constraint.a.toType, b: constraint.b.toType }),
+         ...unify({ a: a.fromType, b: b.fromType }),
+         ...unify({ a: a.toType, b: b.toType }),
       }
    } else if (
-      constraint.a.type == 'TUPLE' &&
-      constraint.b.type == 'TUPLE' &&
+      a.type == 'TUPLE' &&
+      b.type == 'TUPLE' &&
       a.types.length == b.types.length
    ) {
       return a.types.reduce(
          (acc, atype, i) => ({ ...acc, ...unify(atype, b.types[i]) }),
          {}
       )
-   } else if (isTVar(constraint.a)) {
-      return { [constraint.a]: constraint.b }
-   } else if (isTVar(constraint.b)) {
-      return { [constraint.b]: constraint.a }
+   } else if (isTVar(a)) {
+      return { [a]: b }
+   } else if (isTVar(b)) {
+      return { [b]: a }
    } else
       throw new Error(
-         `Can't unify ${JSON.stringify(constraint.a)} with ${JSON.stringify(
-            constraint.b
-         )}`
+         `Can't unify ${JSON.stringify(a)} with ${JSON.stringify(b)}`
       )
 }
 
@@ -208,7 +224,7 @@ const applySubstitutions = (t, substitutions) => {
          a: applySubstitutions(t.a, substitutions),
          b: applySubstitutions(t.b, substitutions),
       }
-   if (['INT', 'FLOAT', 'BOOL'].includes(t)) return t
+   if (['INT', 'FLOAT', 'BOOL', 'COMP'].includes(t)) return t
    else if (t.type == 'FUNC') {
       return {
          type: 'FUNC',
@@ -230,6 +246,11 @@ const applySubstitutions = (t, substitutions) => {
 }
 
 const substitute = (ast, substitutions) => {
+   if (!isTVar(ast.type))
+      throw new Error(
+         'Node has already had its type replaced (duplicate node in tree) ' +
+            JSON.stringify(ast)
+      )
    ast.type = substitutions[ast.type]
    if (ast.tokenName == 'UNARY_OP') {
       substitute(ast.operand, substitutions)
@@ -249,9 +270,13 @@ const substitute = (ast, substitutions) => {
       substitute(ast.then, substitutions)
       substitute(ast.else, substitutions)
    } else if (
-      !['IDENTIFIER', 'INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
-         ast.tokenName
-      )
+      ![
+         'IDENTIFIER',
+         'INT_LITERAL',
+         'FLOAT_LITERAL',
+         'BOOL_LITERAL',
+         'ERROR',
+      ].includes(ast.tokenName)
    )
       throw new Error(
          "Couldn't substitue types into token " + JSON.stringify(ast)

@@ -17,7 +17,7 @@ const prettyPrint = (prefix, ast) => {
    else if (ast.tokenName == 'FLOAT_LITERAL')
       console.log(prefix, ast.val + 'f', ':', prettyType(ast.type))
    else if (ast.tokenName == 'IDENTIFIER')
-      console.log(prefix, ast.id, ':', prettyType(ast.type))
+      console.log(prefix, 'ID', ast.id, ':', prettyType(ast.type))
    else if (ast.tokenName == 'UNARY_OP') {
       console.log(prefix, ast.op, ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.operand)
@@ -53,6 +53,8 @@ const prettyPrint = (prefix, ast) => {
       prettyPrint(prefix + '--', ast.then)
       console.log(prefix, 'ELSE')
       prettyPrint(prefix + '--', ast.else)
+   } else if (ast.tokenName == 'ERROR') {
+      console.log(prefix, 'ERROR', ':', prettyType(ast.type))
    } else
       throw new Error("Can't pretty print unknown token " + JSON.stringify(ast))
 }
@@ -96,6 +98,11 @@ const main = async () => {
       await WebAssembly.instantiate(wasmModule.toBinary({}).buffer, {
          imports: {
             print: console.log,
+            error: () => {
+               console.error(
+                  'Error occurred at runtime, probably a match error'
+               )
+            },
          },
       })
    ).instance

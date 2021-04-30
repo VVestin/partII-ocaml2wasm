@@ -58,6 +58,12 @@ const comp = (ast, ctx = {}, depth = 0) => {
          localDefs: '',
          code: `i32.const ${+ast.val} ;; BOOL ${ast.val}\n`,
       }
+   else if (ast.tokenName == 'ERROR')
+      return {
+         defs: {},
+         localDefs: '',
+         code: `call $raise_error\n${typeToWAT(ast.type)}.const 0\n`,
+      }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
       const op = comp(ast.operand, ctx, depth)
       return {
@@ -193,6 +199,7 @@ const compile = ast => {
    const { defs, localDefs, code } = comp(ast)
    return `
 (module
+  (func $raise_error (import "imports" "error"))
   (func $print1 (import "imports" "print") (param i32))
   (func $print2 (import "imports" "print") (param i32 i32))
   (func $print3 (import "imports" "print") (param i32 i32 i32))
