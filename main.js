@@ -59,12 +59,43 @@ const prettyPrint = (prefix, ast) => {
       throw new Error("Can't pretty print unknown token " + JSON.stringify(ast))
 }
 
+// function found online: https://www.codeproject.com/Tips/387989/Convert-Binary-Single-Precision-Value-to-Float-in
+function ieee32ToFloat(intval) {
+   var fval = 0.0
+   var x //exponent
+   var m //mantissa
+   var s //sign
+   s = intval & 0x80000000 ? -1 : 1
+   x = (intval >> 23) & 0xff
+   m = intval & 0x7fffff
+   switch (x) {
+      case 0:
+         //zero, do nothing, ignore negative zero and subnormals
+         break
+      case 0xff:
+         if (m) fval = NaN
+         else if (s > 0) fval = Number.POSITIVE_INFINITY
+         else fval = Number.NEGATIVE_INFINITY
+         break
+      default:
+         x -= 127
+         m += 0x800000
+         fval = s * (m / 8388608.0) * Math.pow(2, x)
+         break
+   }
+   return fval
+}
+
+const accessMemory = (memory, loc, type) =>
+   type == 'FLOAT' ? ieee32ToFloat(memory[loc / 4]) : memory[loc / 4]
+
 const extract = (val, t, memory) => {
    if (t == 'INT') return val
+   else if (t == 'FLOAT') return val
    else if (t == 'BOOL') return Boolean(val)
    else if (t.type == 'TUPLE')
       return t.types.map((type, i) =>
-         extract(memory[Math.floor(val / 4) + i], type, memory)
+         extract(accessMemory(memory, val + 4 * i, type), type, memory)
       )
 }
 
