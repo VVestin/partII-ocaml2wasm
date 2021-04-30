@@ -163,6 +163,12 @@ const applyTransform = (ast, transform) => {
       }
    } else if (ast.tokenName == 'FUNC') {
       return { ...ast, body: transform(ast.body) }
+   } else if (ast.tokenName == 'LET') {
+      return {
+         ...ast,
+         binding: { ...ast.binding, expr: transform(ast.binding.expr) },
+         body: transform(ast.body),
+      }
    } else if (ast.tokenName == 'TUPLE') {
       return { ...ast, exprs: ast.exprs.map(transform) }
    } else if (ast.tokenName == 'IF') {
