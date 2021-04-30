@@ -126,8 +126,8 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
          code:
             func.code +
             arg.code +
-            `call $applyfunc_${typeToWAT(ast.arg.type)}_${typeToWAT(
-               ast.func.type
+            `call $applyfunc_${typeToWAT(ast.func.type.fromType)}_${typeToWAT(
+               ast.func.type.toType
             )}\n`,
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
@@ -142,7 +142,7 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
       for (let i = 0; i < depth - 1 - varDepth; i++)
          code += 'i32.load offset=4\n'
       if (ctx.$rec[ast.id] !== undefined) code += 'call $add_rec_to_env\n'
-      else code += 'i32.load\n'
+      else code += typeToWAT(ast.type) + '.load\n'
       return { defs: {}, localDefs: '', code }
    } else if (ast.tokenName == 'TUPLE') {
       const exprs = ast.exprs.map(expr => comp(expr, ctx, depth))
@@ -239,6 +239,21 @@ const compile = ast => {
   (func $applyfunc_i32_i32 (param $func i32) (param $arg i32) (result i32)
       (call_indirect (type $func_i32)
                      (call $alloc_i32 (get_local $arg) (i32.load offset=4 (get_local $func)))
+                     (i32.load (get_local $func)))
+      )
+  (func $applyfunc_i32_f32 (param $func i32) (param $arg i32) (result f32)
+      (call_indirect (type $func_f32)
+                     (call $alloc_i32 (get_local $arg) (i32.load offset=4 (get_local $func)))
+                     (i32.load (get_local $func)))
+      )
+  (func $applyfunc_f32_i32 (param $func i32) (param $arg f32) (result i32)
+      (call_indirect (type $func_i32)
+                     (call $alloc_f32 (get_local $arg) (i32.load offset=4 (get_local $func)))
+                     (i32.load (get_local $func)))
+      )
+  (func $applyfunc_f32_f32 (param $func i32) (param $arg f32) (result f32)
+      (call_indirect (type $func_f32)
+                     (call $alloc_f32 (get_local $arg) (i32.load offset=4 (get_local $func)))
                      (i32.load (get_local $func)))
       )
   (func $add_rec_to_env (param $env i32) (result i32)
