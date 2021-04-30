@@ -80,12 +80,25 @@ const annotate = (ast, tenv) => {
 
 const constrain = ast => {
    //console.log('constraining', ast.tokenName)
-   if (ast.tokenName == 'INT_LITERAL') return [{ a: ast.type, b: 'INT' }]
-   else if (ast.tokenName == 'FLOAT_LITERAL')
+   if (ast.tokenName == 'INT_LITERAL') {
+      return [{ a: ast.type, b: 'INT' }]
+   } else if (ast.tokenName == 'FLOAT_LITERAL') {
       return [{ a: ast.type, b: 'FLOAT' }]
-   else if (ast.tokenName == 'BOOL_LITERAL') return [{ a: ast.type, b: 'BOOL' }]
-   else if (ast.tokenName == 'UNARY_OP') {
-      const opType = UNARY_OP_TABLE[ast.op]
+   } else if (ast.tokenName == 'BOOL_LITERAL') {
+      return [{ a: ast.type, b: 'BOOL' }]
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'NTH') {
+      return [
+         {
+            a: ast.operand.type,
+            b: {
+               type: 'TUPLE',
+               types: new Array(ast.n - 1).fill('ANY').concat(ast.type),
+               varLength: true,
+            },
+         },
+         ...constrain(ast.operand),
+      ]
+   } else if (ast.tokenName == 'UNARY_OP') {
       return [
          { a: ast.operand.type, b: UNARY_OP_TABLE[ast.op].arg },
          { a: ast.type, b: UNARY_OP_TABLE[ast.op].res },
@@ -150,8 +163,8 @@ const constrain = ast => {
 
 const solve = constraints => {
    let solution = {}
-   constraints = constraints.filter(({ a, b }) => !['COMP', 'ANY'].includes(b))
-   console.log('constraints without COMP', constraints)
+   //constraints = constraints.filter(({ a, b }) => !['COMP', 'ANY'].includes(b))
+   //console.log('constraints without COMP', constraints)
    for (let constraint of constraints) {
       console.log('solution', solution)
       console.log('applying constraint', constraint)
@@ -161,6 +174,10 @@ const solve = constraints => {
       )
       const substitutions = unify(applySubstitutions(constraint, solution))
       console.log('got substitutions', substitutions)
+      for (let [tvar, t] of Object.entries(substitutions)) {
+         if (['COMP', 'ANY'].includes(t)) delete substitutions[tvar]
+      }
+      console.log('substitutions without COMP', substitutions)
       // updating solution
       for (let tvar of Object.keys(solution)) {
          solution[tvar] = applySubstitutions(solution[tvar], substitutions)
@@ -185,6 +202,7 @@ const isTVar = t => {
 
 // takes a single constraint and returns a substitution that unifies the two sides of the contstraint
 const unify = ({ a, b }) => {
+   console.log('unifying', a, b)
    if (a == 'ANY' || b == 'ANY') {
       return {}
    } else if (['INT', 'FLOAT', 'BOOL'].includes(a) && (a == b || b == 'COMP')) {
@@ -201,12 +219,15 @@ const unify = ({ a, b }) => {
    } else if (
       a.type == 'TUPLE' &&
       b.type == 'TUPLE' &&
-      a.types.length == b.types.length
+      (a.types.length == b.types.length ||
+         (a.varLength && a.types.length <= b.types.length) ||
+         (b.varLength && b.types.length <= a.types.length))
    ) {
-      return a.types.reduce(
-         (acc, atype, i) => ({ ...acc, ...unify(atype, b.types[i]) }),
-         {}
-      )
+      let acc = {}
+      for (let i = 0; i < Math.min(a.types.length, b.types.length); i++) {
+         acc = { ...acc, ...unify({ a: a.types[i], b: b.types[i] }) }
+      }
+      return acc
    } else if (isTVar(a)) {
       return { [a]: b }
    } else if (isTVar(b)) {
@@ -224,16 +245,16 @@ const applySubstitutions = (t, substitutions) => {
          a: applySubstitutions(t.a, substitutions),
          b: applySubstitutions(t.b, substitutions),
       }
-   if (['INT', 'FLOAT', 'BOOL', 'COMP'].includes(t)) return t
+   if (['INT', 'FLOAT', 'BOOL', 'COMP', 'ANY'].includes(t)) return t
    else if (t.type == 'FUNC') {
       return {
-         type: 'FUNC',
+         ...t,
          fromType: applySubstitutions(t.fromType, substitutions),
          toType: applySubstitutions(t.toType, substitutions),
       }
    } else if (t.type == 'TUPLE') {
       return {
-         type: 'TUPLE',
+         ...t,
          types: t.types.map(type => applySubstitutions(type, substitutions)),
       }
    } else if (isTVar(t)) {

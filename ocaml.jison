@@ -73,17 +73,16 @@ expr:
 
 if-expr:
    tuple-expr
+      {$$ = $1.exprs.length == 1 ? $1.exprs[0] : $1}
  | 'if' expr 'then' expr 'else' expr
       {$$ = {tokenName: 'IF', cond: $2, then: $4, else: $6}}
    ;
 
 tuple-expr:
    or-expr
+      {$$ = {tokenName: 'TUPLE', exprs: [$1]}}
  | tuple-expr ',' or-expr
-      {$$ = {
-         tokenName: 'TUPLE',
-         exprs: $1.tokenName == 'TUPLE' ? $1.exprs.concat($3) : [$1, $3],
-      }}
+      {$$ = {tokenName: 'TUPLE', exprs: [...$1.exprs, $3]}}
    ;
 or-expr:
    and-expr
@@ -187,8 +186,22 @@ pattern-matcher:
    ;
 
 pattern:
+   tuple-pattern
+      {$$ = ($1.exprs.length == 1) ? $1.exprs[0] : $1}
+   ;
+
+tuple-pattern:
+   base-pattern
+      {$$ = {tokenName: 'TUPLE', exprs: [$1]}}
+ | tuple-pattern ',' pattern
+      {$$ = { tokenName: 'TUPLE', exprs: [...$1.exprs, $3] }}
+   ;
+
+base-pattern:
    id
  | constant
+ | '(' pattern ')'
+   {$$ = $2}
    ;
 
 id: 'ident' {$$ = {tokenName: 'IDENTIFIER', id: $1}};

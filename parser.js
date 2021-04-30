@@ -115,6 +115,22 @@ const unifyPattern = (pattern, matcher) => {
          ],
          decls: [],
       }
+   else if (pattern.tokenName == 'TUPLE')
+      return pattern.exprs.reduce(
+         (acc, expr, i) => {
+            const { checks, decls } = unifyPattern(expr, {
+               tokenName: 'UNARY_OP',
+               op: 'NTH',
+               n: i + 1,
+               operand: { ...matcher },
+            })
+            return {
+               checks: [...acc.checks, ...checks],
+               decls: [...acc.decls, ...decls],
+            }
+         },
+         { checks: [], decls: [] }
+      )
    else
       throw new Error(
          "Can't unify unknown pattern type " + JSON.stringify(pattern)

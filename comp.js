@@ -78,6 +78,15 @@ const comp = (ast, ctx = {}, depth = 0) => {
          localDefs: op.localDefs,
          code: op.code + 'f32.neg\n',
       }
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'NTH') {
+      const op = comp(ast.operand, ctx, depth)
+      return {
+         defs: op.defs,
+         localDefs: op.localDefs,
+         code: `${op.code}${typeToWAT(ast.type)}.load offset=${
+            4 * (ast.n - 1)
+         }\n`,
+      }
    } else if (ast.tokenName == 'INFIX_OP') {
       const lhs = comp(ast.lhs, ctx, depth)
       const rhs = comp(ast.rhs, ctx, depth)

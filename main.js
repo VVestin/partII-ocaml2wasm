@@ -7,7 +7,9 @@ const prettyType = t => {
    if (t.type == 'FUNC')
       return `(${prettyType(t.fromType)} -> ${prettyType(t.toType)})`
    if (t.type == 'TUPLE')
-      return `(${t.types.map(type => prettyType(type)).join(' * ')})`
+      return `(${t.types.map(type => prettyType(type)).join(' * ')}${
+         t.varLength ? ' * ...' : ''
+      })`
    else return t
 }
 
