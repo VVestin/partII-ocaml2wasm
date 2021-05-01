@@ -37,6 +37,12 @@
 "match"                    return 'match';
 "with"                     return 'with';
 "|"                        return '|';
+"type"                     return 'type';
+"of"                       return 'of';
+"int"                      return 'int';
+"float"                    return 'float';
+"bool"                     return 'bool';
+"of"                       return 'of';
 [a-zA-Z_][a-zA-Z_0-9']*    return 'ident';
 
 /lex
@@ -52,12 +58,20 @@
 
 %left 'match'
 %left '|'
+%left ','
 
 %start start
 
 %%
 
-start: expr {return $1};
+start: stmt {return $1};
+
+stmt:
+   expr
+   {$$ = {expr: $1, decls: []}}
+ | type-decl stmt
+   {$$ = {...$2, decls: [...$2.decls, $1]}}
+   ;
 
 expr:
    if-expr
@@ -205,3 +219,35 @@ base-pattern:
    ;
 
 id: 'ident' {$$ = {tokenName: 'IDENTIFIER', id: $1}};
+
+type-decl:
+   'type' id '=' constr-decls
+      {$$ = {tokenName: 'TYPE_DECL', typeName: $2.id, constructors: $4}}
+ ;
+
+constr-decls:
+   constr-decl
+      {$$ = [$1]}
+ | constr-decls '|' constr-decl
+      {$$ = [...$1, $3]}
+   ;
+
+constr-decl:
+   id
+ | id 'of' type-expr
+      {$$ = { constructor: $1, paramType: $3}}
+   ;
+
+type-expr:
+   primitive-type
+ | type-expr '*' primitive-type
+   {$$ = {type: 'TUPLE', types: $1.type == 'TUPLE' ? [...$1.types, $3] : [$1, $3]}}
+   ;
+
+primitive-type:
+   'int' {$$ = 'INT'}
+ | 'float' {$$ = 'FLOAT'}
+ | 'bool' {$$ = 'BOOL'}
+ | id
+ | '(' type-expr ')' {$$ = $2}
+   ;
