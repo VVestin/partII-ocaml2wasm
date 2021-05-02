@@ -138,8 +138,8 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
       const constr = constructorTypes[ast.func.id]
       const ptrVar = 'ptr' + newLocalLabel()
       return {
-         defs: {},
-         localDefs: `(local $${ptrVar} i32)\n`,
+         defs: arg.defs,
+         localDefs: `(local $${ptrVar} i32)\n` + arg.localDefs,
          code: `(set_local $${ptrVar} (get_global $heap_ptr))
 (set_global $heap_ptr
   (i32.add (get_global $heap_ptr) (i32.const 8)))

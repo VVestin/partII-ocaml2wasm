@@ -47,7 +47,6 @@ const parse = input => {
       'withoutMatch',
       util.inspect(withoutMatch, { showHidden: false, depth: null })
    )
-   console.log('--------------')
    const withoutLet = transformLet(withoutMatch)
    console.log(
       'withoutLet',
@@ -157,7 +156,6 @@ const newLabel = (() => {
 })()
 
 const transformLet = ast => {
-   console.log('removing LET', ast)
    if (ast.tokenName == 'LET') {
       const token = {
          tokenName: 'APP',
