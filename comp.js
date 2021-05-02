@@ -37,6 +37,7 @@ const typeToWAT = t => {
    else if (t == 'BOOL') return 'i32'
    else if (t.type == 'FUNC') return 'i32'
    else if (t.type == 'TUPLE') return 'i32'
+   else if (typeof t == 'string' && t.startsWith('$type-')) return 'i32'
    else throw new Error('Unknown type' + JSON.stringify(t))
 }
 
@@ -46,7 +47,7 @@ const indent = code =>
       .map(line => '  ' + line)
       .join('\n')
 
-const comp = (ast, ctx = {}, depth = 0) => {
+const comp = (ast, datatypes, constructorTypes, ctx = {}, depth = 0) => {
    console.log('compiling', ast.tokenName, ctx, depth)
    if (ast.tokenName == 'INT_LITERAL')
       return { defs: {}, localDefs: '', code: `i32.const ${ast.val}\n` }
@@ -65,21 +66,21 @@ const comp = (ast, ctx = {}, depth = 0) => {
          code: `call $raise_error\n${typeToWAT(ast.type)}.const 0\n`,
       }
    else if (ast.tokenName == 'UNARY_OP' && ast.op == '-') {
-      const op = comp(ast.operand, ctx, depth)
+      const op = comp(ast.operand, datatypes, constructorTypes, ctx, depth)
       return {
          defs: op.defs,
          localDefs: op.localDefs,
          code: 'i32.const 0\n' + op.code + 'i32.sub\n',
       }
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == '-.') {
-      const op = comp(ast.operand, ctx, depth)
+      const op = comp(ast.operand, datatypes, constructorTypes, ctx, depth)
       return {
          defs: op.defs,
          localDefs: op.localDefs,
          code: op.code + 'f32.neg\n',
       }
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'NTH') {
-      const op = comp(ast.operand, ctx, depth)
+      const op = comp(ast.operand, datatypes, constructorTypes, ctx, depth)
       return {
          defs: op.defs,
          localDefs: op.localDefs,
@@ -88,8 +89,8 @@ const comp = (ast, ctx = {}, depth = 0) => {
          }\n`,
       }
    } else if (ast.tokenName == 'INFIX_OP') {
-      const lhs = comp(ast.lhs, ctx, depth)
-      const rhs = comp(ast.rhs, ctx, depth)
+      const lhs = comp(ast.lhs, datatypes, constructorTypes, ctx, depth)
+      const rhs = comp(ast.rhs, datatypes, constructorTypes, ctx, depth)
       const operatorCode =
          INFIX_TO_WAT[ast.op] || COMPARISON_TO_WAT[ast.lhs.type][ast.op]
       return {
@@ -101,6 +102,8 @@ const comp = (ast, ctx = {}, depth = 0) => {
       const newDepth = ast.rec ? depth + 1 : depth
       const expr = comp(
          ast.body,
+         datatypes,
+         constructorTypes,
          {
             ...ctx,
             $rec: {
@@ -126,9 +129,32 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
             ast.rec ? 'call $add_rec_to_env\n' : ''
          }`,
       }
+   } else if (
+      ast.tokenName == 'APP' &&
+      ast.func.tokenName == 'IDENTIFIER' &&
+      constructorTypes[ast.func.id]
+   ) {
+      const arg = comp(ast.arg, datatypes, constructorTypes, ctx, depth)
+      const constr = constructorTypes[ast.func.id]
+      const ptrVar = 'ptr' + newLocalLabel()
+      return {
+         defs: {},
+         localDefs: `(local $${ptrVar} i32)\n`,
+         code: `(set_local $${ptrVar} (get_global $heap_ptr))
+(set_global $heap_ptr
+  (i32.add (get_global $heap_ptr) (i32.const 8)))
+(i32.store
+  (get_local $${ptrVar})
+  (i32.const ${constr.index}))
+get_local $${ptrVar}
+${arg.code.trim()}
+${typeToWAT(constr.paramType)}.store offset=4
+get_local $${ptrVar}
+\n`,
+      }
    } else if (ast.tokenName == 'APP') {
-      const func = comp(ast.func, ctx, depth)
-      const arg = comp(ast.arg, ctx, depth)
+      const func = comp(ast.func, datatypes, constructorTypes, ctx, depth)
+      const arg = comp(ast.arg, datatypes, constructorTypes, ctx, depth)
       return {
          defs: { ...func.defs, ...arg.defs },
          localDefs: func.localDefs + arg.localDefs,
@@ -138,6 +164,21 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
             `call $applyfunc_${typeToWAT(ast.func.type.fromType)}_${typeToWAT(
                ast.func.type.toType
             )}\n`,
+      }
+   } else if (ast.tokenName == 'IDENTIFIER' && constructorTypes[ast.id]) {
+      const constr = constructorTypes[ast.id]
+      if (!constr.paramType) {
+         return {
+            defs: {},
+            localDefs: '',
+            code: `(i32.store
+  (get_global $heap_ptr)
+  (i32.const ${constr.index}))
+get_global $heap_ptr
+(set_global $heap_ptr
+  (i32.add (get_global $heap_ptr) (i32.const 4)))
+\n`,
+         }
       }
    } else if (ast.tokenName == 'IDENTIFIER') {
       if (ctx[ast.id] === undefined && ctx.$rec[ast.id] === undefined)
@@ -154,7 +195,9 @@ ${indent(expr.localDefs).trim()}${indent(expr.code)})\n`,
       else code += typeToWAT(ast.type) + '.load\n'
       return { defs: {}, localDefs: '', code }
    } else if (ast.tokenName == 'TUPLE') {
-      const exprs = ast.exprs.map(expr => comp(expr, ctx, depth))
+      const exprs = ast.exprs.map(expr =>
+         comp(expr, datatypes, constructorTypes, ctx, depth)
+      )
       const ptrVar = 'ptr' + newLocalLabel()
       return {
          defs: exprs.reduce((acc, expr) => ({ ...acc, ...expr.defs }), {}),
@@ -175,9 +218,9 @@ get_local $${ptrVar}\n`
    .join('')}\n`,
       }
    } else if (ast.tokenName == 'IF') {
-      const cond = comp(ast.cond, ctx, depth)
-      const then = comp(ast.then, ctx, depth)
-      const elze = comp(ast.else, ctx, depth) // elze since else is a js keyword :(
+      const cond = comp(ast.cond, datatypes, constructorTypes, ctx, depth)
+      const then = comp(ast.then, datatypes, constructorTypes, ctx, depth)
+      const elze = comp(ast.else, datatypes, constructorTypes, ctx, depth) // elze since else is a js keyword :(
 
       return {
          defs: { ...cond.defs, ...then.defs, ...elze.defs },
@@ -204,8 +247,12 @@ const newLocalLabel = (() => {
    return () => localCounter++
 })()
 
-const compile = ast => {
-   const { defs, localDefs, code } = comp(ast)
+const compile = ir => {
+   const { defs, localDefs, code } = comp(
+      ir.ast,
+      ir.datatypes,
+      ir.constructorTypes
+   )
    return `
 (module
   (func $raise_error (import "imports" "error"))
@@ -274,7 +321,7 @@ const compile = ast => {
          .map(func => '$' + func)
          .join(' ')}))
 ${Object.values(defs).map(indent).join('\n')}
-  (func $main (export "main") (result ${typeToWAT(ast.type)})
+  (func $main (export "main") (result ${typeToWAT(ir.ast.type)})
     (local $env i32)
     ${indent(indent(localDefs)).trim()}${indent(indent(code)).trim()}
     )

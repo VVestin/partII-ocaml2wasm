@@ -89,38 +89,59 @@ function ieee32ToFloat(intval) {
 }
 
 const accessMemory = (memory, loc, type) =>
-   type == 'FLOAT' ? ieee32ToFloat(memory[loc / 4]) : memory[loc / 4]
+   type == 'FLOAT' ? ieee32ToFloat(memory[loc]) : memory[loc]
 
-const extract = (val, t, memory) => {
+const extract = (val, t, memory, datatypes) => {
+   console.log('extracting', val, t)
    if (t == 'INT') return val
    else if (t == 'FLOAT') return val
    else if (t == 'BOOL') return Boolean(val)
    else if (t.type == 'TUPLE')
       return t.types.map((type, i) =>
-         extract(accessMemory(memory, val + 4 * i, type), type, memory)
+         extract(
+            accessMemory(memory, val / 4 + i, type),
+            type,
+            memory,
+            datatypes
+         )
       )
+   else if (typeof t == 'string' && t.startsWith('$type-')) {
+      const datatype = datatypes[t.slice(6)]
+      const constr = datatype[memory[val / 4]]
+      return {
+         constructor: constr.name,
+         ...(constr.paramType && {
+            param: extract(
+               accessMemory(memory, val / 4 + 1, constr.paramType),
+               constr.paramType,
+               memory,
+               datatypes
+            ),
+         }),
+      }
+   }
 }
 
 const main = async () => {
    // Parsing
-   const ast = parse(process.argv[2])
+   const ir = parse(process.argv[2])
    console.log('DONE PARSING \n\n')
-   console.log('ast', ast)
+   console.log('ast', ir.ast)
    console.log()
-   prettyPrint('', ast)
+   prettyPrint('', ir.ast)
 
    try {
-      inferTypes(ast)
-      console.log('type', ast.type)
+      inferTypes(ir)
+      console.log('type', ir.ast.type)
    } catch (e) {
       console.error(e)
       return
    }
 
-   prettyPrint('', ast)
+   prettyPrint('', ir.ast)
 
    // Compiling
-   const wat = comp(ast)
+   const wat = comp(ir)
    console.log(wat)
 
    // Executing
@@ -144,8 +165,9 @@ const main = async () => {
    const memory = new Uint32Array(wasm.heap.buffer, 0, 50)
 
    const output = wasm.main()
-   console.log('main', output, ':', prettyType(ast.type))
-   console.log('extracted', extract(output, ast.type, memory))
+   console.log(memory)
+   console.log('main', output, ':', prettyType(ir.ast.type))
+   console.log('extracted', extract(output, ir.ast.type, memory, ir.datatypes))
 }
 
 main()

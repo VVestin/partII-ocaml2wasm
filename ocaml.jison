@@ -68,9 +68,9 @@ start: stmt {return $1};
 
 stmt:
    expr
-   {$$ = {expr: $1, decls: []}}
+   {$$ = {ast: $1, datatypes: {}}}
  | type-decl stmt
-   {$$ = {...$2, decls: [...$2.decls, $1]}}
+   {$$ = {...$2, datatypes: {...$2.datatypes, [$1.typeName]: $1.constructors}}}
    ;
 
 expr:
@@ -234,8 +234,9 @@ constr-decls:
 
 constr-decl:
    id
+      {$$ = {name: $1.id, paramType: null}}
  | id 'of' type-expr
-      {$$ = { constructor: $1, paramType: $3}}
+      {$$ = {name: $1.id, paramType: $3}}
    ;
 
 type-expr:
@@ -248,6 +249,6 @@ primitive-type:
    'int' {$$ = 'INT'}
  | 'float' {$$ = 'FLOAT'}
  | 'bool' {$$ = 'BOOL'}
- | id
+ | id {$$ = '$type-' + $1.id}
  | '(' type-expr ')' {$$ = $2}
    ;

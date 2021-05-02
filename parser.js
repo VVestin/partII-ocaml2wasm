@@ -27,7 +27,20 @@ parser.yy.makeUnary = (op, operand) => ({
 })
 
 const parse = input => {
-   const ast = parser.parse(input)
+   const { ast, datatypes } = parser.parse(input)
+   console.log('datatypes', datatypes)
+   const constructorTypes = {}
+   Object.entries(datatypes).forEach(([typeName, constrs]) => {
+      constrs.forEach(({ name, paramType }, i) => {
+         constructorTypes[name] = {
+            paramType,
+            returnType: '$type-' + typeName,
+            index: i,
+         }
+      })
+   })
+   console.log('datatypes:', datatypes)
+   console.log('constructors:', constructorTypes)
    console.log(ast)
    const withoutMatch = transformMatch(ast)
    console.log(
@@ -39,7 +52,7 @@ const parse = input => {
       'withoutLet',
       util.inspect(withoutLet, { showHidden: false, depth: null })
    )
-   return withoutLet
+   return { ast: withoutLet, datatypes, constructorTypes }
 }
 
 const combineChecks = checks =>
@@ -209,7 +222,7 @@ const applyTransform = (ast, transform) => {
 
 if (require.main == module) {
    const input = process.argv[2]
-   const ast = parse(input)
+   parse(input)
 }
 
 module.exports = parse

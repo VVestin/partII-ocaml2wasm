@@ -30,9 +30,26 @@ const newTypeLabel = (() => {
    return () => 't' + counter++
 })()
 
-const inferTypes = ast => {
-   annotate(ast, {})
-   const constraints = constrain(ast)
+const inferTypes = ({ ast, datatypes, constructorTypes }) => {
+   const tenv = Object.fromEntries(
+      Object.keys(constructorTypes).map(constr => [constr, newTypeLabel()])
+   )
+   annotate(ast, tenv)
+   const constraints = constrain(ast, constructorTypes)
+   Object.entries(constructorTypes).forEach(
+      ([constr, { paramType, returnType }]) => {
+         constraints.push({
+            a: tenv[constr],
+            b: paramType
+               ? {
+                    type: 'FUNC',
+                    fromType: paramType,
+                    toType: returnType,
+                 }
+               : returnType,
+         })
+      }
+   )
    console.log('constraints', constraints)
    const types = solve(constraints)
    console.log(types)
@@ -78,7 +95,7 @@ const annotate = (ast, tenv) => {
       throw new Error("Couldn't annotate token " + JSON.stringify(ast))
 }
 
-const constrain = ast => {
+const constrain = (ast, constructorTypes) => {
    //console.log('constraining', ast.tokenName)
    if (ast.tokenName == 'INT_LITERAL') {
       return [{ a: ast.type, b: 'INT' }]
@@ -200,6 +217,10 @@ const isTVar = t => {
    return typeof t == 'string' && t.startsWith('t')
 }
 
+const isDatatype = t => {
+   return typeof t == 'string' && t.startsWith('$type-')
+}
+
 // takes a single constraint and returns a substitution that unifies the two sides of the contstraint
 const unify = ({ a, b }) => {
    console.log('unifying', a, b)
@@ -209,6 +230,8 @@ const unify = ({ a, b }) => {
       return {} // no substitution since it's already a match
    } else if (a == 'COMP' && ['INT', 'FLOAT', 'BOOL', 'COMP'].includes(b)) {
       return {} // no substitution since it's already a match
+   } else if (isDatatype(a) && isDatatype(b) && a == b) {
+      return {}
    } else if (isTVar(a) && a == b) {
       return {} // no substitution since it's already a match
    } else if (a.type == 'FUNC' && b.type == 'FUNC') {
@@ -245,7 +268,8 @@ const applySubstitutions = (t, substitutions) => {
          a: applySubstitutions(t.a, substitutions),
          b: applySubstitutions(t.b, substitutions),
       }
-   if (['INT', 'FLOAT', 'BOOL', 'COMP', 'ANY'].includes(t)) return t
+   if (['INT', 'FLOAT', 'BOOL', 'COMP', 'ANY'].includes(t) || isDatatype(t))
+      return t
    else if (t.type == 'FUNC') {
       return {
          ...t,
