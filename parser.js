@@ -47,6 +47,7 @@ const parse = input => {
       'withoutMatch',
       util.inspect(withoutMatch, { showHidden: false, depth: null })
    )
+   console.log('--------------')
    const withoutLet = transformLet(withoutMatch)
    console.log(
       'withoutLet',
@@ -156,15 +157,16 @@ const newLabel = (() => {
 })()
 
 const transformLet = ast => {
+   console.log('removing LET', ast)
    if (ast.tokenName == 'LET') {
       const token = {
          tokenName: 'APP',
          func: {
             tokenName: 'FUNC',
-            param: transformLet(ast.binding.id),
+            param: ast.binding.id,
             body: transformLet(ast.body),
          },
-         arg: ast.binding.expr,
+         arg: transformLet(ast.binding.expr),
       }
       let func = token.arg
       for (let param of ast.binding.params) {
