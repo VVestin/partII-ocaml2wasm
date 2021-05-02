@@ -115,6 +115,20 @@ const constrain = (ast, constructorTypes) => {
          },
          ...constrain(ast.operand),
       ]
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_INDEX') {
+      console.log([
+         { a: ast.operand.type, b: ast.constructor.returnType },
+         { a: ast.type, b: 'INT' },
+      ])
+      return [
+         { a: ast.operand.type, b: ast.constructor.returnType },
+         { a: ast.type, b: 'INT' },
+      ]
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_ARG') {
+      return [
+         { a: ast.operand.type, b: ast.constructor.returnType },
+         { a: ast.type, b: ast.constructor.paramType },
+      ]
    } else if (ast.tokenName == 'UNARY_OP') {
       return [
          { a: ast.operand.type, b: UNARY_OP_TABLE[ast.op].arg },
@@ -291,11 +305,11 @@ const applySubstitutions = (t, substitutions) => {
 }
 
 const substitute = (ast, substitutions) => {
-   if (!isTVar(ast.type))
-      throw new Error(
+   if (!isTVar(ast.type)) return
+   /*throw new Error(
          'Node has already had its type replaced (duplicate node in tree) ' +
             JSON.stringify(ast)
-      )
+      )*/
    ast.type = substitutions[ast.type]
    if (ast.tokenName == 'UNARY_OP') {
       substitute(ast.operand, substitutions)

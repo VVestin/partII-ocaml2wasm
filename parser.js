@@ -41,8 +41,8 @@ const parse = input => {
    })
    console.log('datatypes:', datatypes)
    console.log('constructors:', constructorTypes)
-   console.log(ast)
-   const withoutMatch = transformMatch(ast)
+   console.log('ast', util.inspect(ast, { showHidden: false, depth: null }))
+   const withoutMatch = transformMatch(constructorTypes)(ast)
    console.log(
       'withoutMatch',
       util.inspect(withoutMatch, { showHidden: false, depth: null })
@@ -78,39 +78,70 @@ const applyDecls = (decls, expr) =>
       expr
    )
 
-const transformMatch = ast => {
-   console.log('removing match from', ast)
-   if (ast.tokenName == 'MATCH') {
-      const matcher = { tokenName: 'IDENTIFIER', id: '$matcher' + newLabel() }
-      let body = { tokenName: 'ERROR' }
-      ast.clauses.reverse().forEach(clause => {
-         console.log(
-            'unified',
-            clause.pattern,
-            matcher,
-            unifyPattern(clause.pattern, matcher)
-         )
-         const { checks, decls } = unifyPattern(clause.pattern, matcher)
-         const cond = combineChecks(checks)
-         const then = applyDecls(decls, clause.expr)
-         body = {
-            tokenName: 'IF',
-            cond,
-            then,
-            else: body,
+const transformMatch = constructorTypes => {
+   const thisTransform = ast => {
+      console.log('removing match from', ast)
+      if (ast.tokenName == 'MATCH') {
+         const matcher = {
+            tokenName: 'IDENTIFIER',
+            id: '$matcher' + newLabel(),
          }
-      })
-      return {
-         tokenName: 'LET',
-         binding: { id: matcher, expr: ast.expr, params: [] },
-         params: [],
-         body,
-      }
-   } else return applyTransform(ast, transformMatch)
+         let body = { tokenName: 'ERROR' }
+         ast.clauses.reverse().forEach(clause => {
+            console.log(
+               'unified',
+               clause.pattern,
+               matcher,
+               unifyPattern(clause.pattern, matcher, constructorTypes)
+            )
+            const { checks, decls } = unifyPattern(
+               clause.pattern,
+               matcher,
+               constructorTypes
+            )
+            const cond = combineChecks(checks)
+            const then = applyDecls(decls, clause.expr)
+            body = {
+               tokenName: 'IF',
+               cond,
+               then,
+               else: body,
+            }
+         })
+         return {
+            tokenName: 'LET',
+            binding: { id: { ...matcher }, expr: ast.expr, params: [] },
+            params: [],
+            body,
+         }
+      } else return applyTransform(ast, thisTransform)
+   }
+   return thisTransform
 }
 
-const unifyPattern = (pattern, matcher) => {
-   if (pattern.tokenName == 'IDENTIFIER')
+const unifyPattern = (pattern, matcher, constructorTypes) => {
+   console.log('unifying', pattern, matcher, constructorTypes)
+   if (pattern.tokenName == 'IDENTIFIER' && constructorTypes[pattern.id])
+      return {
+         checks: [
+            {
+               tokenName: 'INFIX_OP',
+               op: '=',
+               lhs: {
+                  tokenName: 'UNARY_OP',
+                  op: 'GET_INDEX',
+                  constructor: constructorTypes[pattern.id],
+                  operand: { ...matcher },
+               },
+               rhs: {
+                  tokenName: 'INT_LITERAL',
+                  val: constructorTypes[pattern.id].index,
+               },
+            },
+         ],
+         decls: [],
+      }
+   else if (pattern.tokenName == 'IDENTIFIER')
       return { checks: [], decls: [{ id: pattern, expr: { ...matcher } }] }
    else if (
       ['INT_LITERAL', 'FLOAT_LITERAL', 'BOOL_LITERAL'].includes(
@@ -131,12 +162,16 @@ const unifyPattern = (pattern, matcher) => {
    else if (pattern.tokenName == 'TUPLE')
       return pattern.exprs.reduce(
          (acc, expr, i) => {
-            const { checks, decls } = unifyPattern(expr, {
-               tokenName: 'UNARY_OP',
-               op: 'NTH',
-               n: i + 1,
-               operand: { ...matcher },
-            })
+            const { checks, decls } = unifyPattern(
+               expr,
+               {
+                  tokenName: 'UNARY_OP',
+                  op: 'NTH',
+                  n: i + 1,
+                  operand: { ...matcher },
+               },
+               constructorTypes
+            )
             return {
                checks: [...acc.checks, ...checks],
                decls: [...acc.decls, ...decls],
@@ -144,7 +179,39 @@ const unifyPattern = (pattern, matcher) => {
          },
          { checks: [], decls: [] }
       )
-   else
+   else if (pattern.tokenName == 'DECONSTRUCT') {
+      const constr = constructorTypes[pattern.constructor]
+      const { checks, decls } = unifyPattern(
+         pattern.argPattern,
+         {
+            tokenName: 'UNARY_OP',
+            op: 'GET_ARG',
+            constructor: constr,
+            operand: { ...matcher },
+         },
+         constructorTypes
+      )
+      return {
+         checks: [
+            {
+               tokenName: 'INFIX_OP',
+               op: '=',
+               lhs: {
+                  tokenName: 'UNARY_OP',
+                  op: 'GET_INDEX',
+                  constructor: constr,
+                  operand: { ...matcher },
+               },
+               rhs: {
+                  tokenName: 'INT_LITERAL',
+                  val: constr.index,
+               },
+            },
+            ...checks,
+         ],
+         decls,
+      }
+   } else
       throw new Error(
          "Can't unify unknown pattern type " + JSON.stringify(pattern)
       )

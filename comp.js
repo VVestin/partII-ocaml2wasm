@@ -88,6 +88,20 @@ const comp = (ast, datatypes, constructorTypes, ctx = {}, depth = 0) => {
             4 * (ast.n - 1)
          }\n`,
       }
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_INDEX') {
+      const op = comp(ast.operand, datatypes, constructorTypes, ctx, depth)
+      return {
+         defs: op.defs,
+         localDefs: op.localDefs,
+         code: `${op.code}${typeToWAT(ast.type)}.load\n`,
+      }
+   } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_ARG') {
+      const op = comp(ast.operand, datatypes, constructorTypes, ctx, depth)
+      return {
+         defs: op.defs,
+         localDefs: op.localDefs,
+         code: `${op.code}${typeToWAT(ast.type)}.load offset=4\n`,
+      }
    } else if (ast.tokenName == 'INFIX_OP') {
       const lhs = comp(ast.lhs, datatypes, constructorTypes, ctx, depth)
       const rhs = comp(ast.rhs, datatypes, constructorTypes, ctx, depth)

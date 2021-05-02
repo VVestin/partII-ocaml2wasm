@@ -200,19 +200,15 @@ pattern-matcher:
    ;
 
 pattern:
-   tuple-pattern
-      {$$ = ($1.exprs.length == 1) ? $1.exprs[0] : $1}
-   ;
-
-tuple-pattern:
    base-pattern
-      {$$ = {tokenName: 'TUPLE', exprs: [$1]}}
- | tuple-pattern ',' pattern
-      {$$ = { tokenName: 'TUPLE', exprs: [...$1.exprs, $3] }}
+ | pattern ',' base-pattern
+      {$$ = { tokenName: 'TUPLE', exprs: $1.tokenName == 'TUPLE' ? [...$1.exprs, $3] : [$1, $3] }}
    ;
 
 base-pattern:
    id
+ | id base-pattern
+   {$$ = {tokenName: 'DECONSTRUCT', constructor: $1.id, argPattern: $2}}
  | constant
  | '(' pattern ')'
    {$$ = $2}
