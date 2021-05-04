@@ -1,5 +1,12 @@
 *.swp
 *.wasm
+*.aux
+*.out
+*.log
+*.lof
+*.toc
 learn/node_modules/
 node_modules/
 test/__snapshots__
+docs/diss.pdf
+docs/proposal.pdf

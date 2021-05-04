@@ -1,0 +1,141 @@
+% Template for a Computer Science Tripos Part II project dissertation
+\documentclass[12pt,a4paper,twoside,openright]{report}
+\usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
+\usepackage[margin=25mm]{geometry}  % adjusts page layout
+\usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
+\usepackage{verbatim}
+\usepackage{docmute}   % only needed to allow inclusion of proposal.tex
+
+\raggedbottom                           % try to avoid widows and orphans
+\sloppy
+\clubpenalty1000%
+\widowpenalty1000%
+
+\renewcommand{\baselinestretch}{1.1}    % adjust line spacing to make
+                                        % more readable
+
+\begin{document}
+
+\bibliographystyle{plain}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+
+
+\pagestyle{empty}
+
+\rightline{\LARGE \textbf{Weston Metzler}}
+
+\vspace*{60mm}
+\begin{center}
+\Huge
+\textbf{Compiling OCaml to WebAssembly} \\[5mm]
+Computer Science Tripos -- Part II \\[5mm]
+Homerton College \\[5mm]
+\today  % today's date
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Proforma, table of contents and list of figures
+
+\pagestyle{plain}
+
+\chapter*{Proforma}
+
+{\large
+\begin{tabular}{ll}
+Name:               & \bf Weston Metzler                       \\
+College:            & \bf Homerton College                      \\
+Project Title:      & \bf Compiling OCaml to WebAssembly         \\
+Examination:        & \bf Computer Science Tripos -- Part II, July 2021  \\
+Word Count:         & \bf TODO \\
+Project Originator: & Dr Timothy Jones                    \\
+Supervisor:         & Dr John Fawcett                    \\
+\end{tabular}
+}
+\stepcounter{footnote}
+
+\section*{Original Aims of the Project}
+
+TODO
+
+\section*{Work Completed}
+
+TODO
+
+\section*{Special Difficulties}
+
+TODO
+
+\newpage
+\section*{Declaration}
+
+I, Weston Metzler of Homerton College, being a candidate for Part II of the Computer
+Science Tripos, hereby declare that this dissertation and the work described in
+it are my own work, unaided except as may be specified below, and that the
+dissertation does not contain material that has already been used to any substantial
+extent for a comparable purpose.
+
+\bigskip
+\leftline{Signed [signature]}
+
+\medskip
+\leftline{Date [date]}
+
+\tableofcontents
+
+\listoffigures
+
+\newpage
+\section*{Acknowledgements}
+
+TODO
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% now for the chapters
+
+\pagestyle{headings}
+
+\chapter{Introduction}
+
+TODO
+
+\chapter{Preparation}
+
+This chapter describes the work done prior to starting the project.
+We start with background information on WebAssembly and the tools and techniques used in the implementation.
+Then we will look into the requirements analysis for this project, laying out in detail the work to be done.
+Finally, we will look at the software engineering practices used to minimize risk and ensure the execution of the project meets the requirements.
+
+\section{Background}
+\subsection{WebAssembly}
+
+In the introduction
+
+\chapter{Implementation}
+
+TODO
+
+\chapter{Evaluation}
+
+TODO
+
+\chapter{Conclusion}
+
+TODO
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the bibliography
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{refs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the appendices
+\appendix
+
+\chapter{Project Proposal}
+
+% \input{proposal}
+
+\end{document}
