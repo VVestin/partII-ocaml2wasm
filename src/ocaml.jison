@@ -43,6 +43,7 @@
 "float"                    return 'float';
 "bool"                     return 'bool';
 "of"                       return 'of';
+"mod"                      return 'mod';
 [a-zA-Z_][a-zA-Z_0-9']*    return 'ident';
 
 /lex
@@ -52,7 +53,7 @@
 %left '&&'
 %right '<' '<=' '>' '>=' '=' '!='
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' 'mod'
 %left UMINUS
 %left APP*/
 
@@ -139,6 +140,8 @@ mult-expr:
  | mult-expr '*' unary-expr
       {$$ = yy.makeInfix($2, $1, $3)}
  | mult-expr '/' unary-expr
+      {$$ = yy.makeInfix($2, $1, $3)}
+ | mult-expr 'mod' unary-expr
       {$$ = yy.makeInfix($2, $1, $3)}
    ;
 

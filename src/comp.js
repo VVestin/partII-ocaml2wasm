@@ -3,6 +3,7 @@ const INFIX_TO_WAT = {
    '*': 'i32.mul',
    '-': 'i32.sub',
    '/': 'i32.div_s',
+   mod: 'i32.rem_s',
    '+.': 'f32.add',
    '-.': 'f32.sub',
    '*.': 'f32.mul',
@@ -276,7 +277,7 @@ const compile = ir => {
   (func $print4 (import "imports" "print") (param i32 i32 i32 i32))
   (func $print5 (import "imports" "print") (param i32 i32 i32 i32 i32))
 
-  (memory $heap (export "heap") 1)
+  (memory $heap (export "heap") 12)
   (global $heap_ptr (mut i32) (i32.const 4)) ;; start 1 byte in so 0 can be a null pointer
   (type $func_i32 (func (param i32) (result i32)))
   (type $func_f32 (func (param i32) (result f32)))

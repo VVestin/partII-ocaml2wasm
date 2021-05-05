@@ -11,6 +11,7 @@ INFIX_OP_TABLE = {
    '-': { arg1: 'INT', arg2: 'INT', res: 'INT' },
    '*': { arg1: 'INT', arg2: 'INT', res: 'INT' },
    '/': { arg1: 'INT', arg2: 'INT', res: 'INT' },
+   mod: { arg1: 'INT', arg2: 'INT', res: 'INT' },
    '+.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
    '-.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },
    '*.': { arg1: 'FLOAT', arg2: 'FLOAT', res: 'FLOAT' },

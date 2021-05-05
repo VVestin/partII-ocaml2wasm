@@ -100,7 +100,7 @@ const transformMatch = constructorTypes => {
                constructorTypes
             )
             const cond = combineChecks(checks)
-            const then = applyDecls(decls, clause.expr)
+            const then = applyDecls(decls, thisTransform(clause.expr))
             body = {
                tokenName: 'IF',
                cond,
@@ -110,7 +110,11 @@ const transformMatch = constructorTypes => {
          })
          return {
             tokenName: 'LET',
-            binding: { id: { ...matcher }, expr: ast.expr, params: [] },
+            binding: {
+               id: { ...matcher },
+               expr: thisTransform(ast.expr),
+               params: [],
+            },
             params: [],
             body,
          }

@@ -1,5 +1,6 @@
 let exchange k = 10 * (k mod 10) + k / 10 in
-let is_valid_answer (son_age, grandpa_age) =
+let is_valid_answer answer =
+  match answer with (son_age, grandpa_age) ->
   son_age * 4 = grandpa_age &&
   (exchange grandpa_age) * 3 = (exchange son_age) in
 let rec find answer =

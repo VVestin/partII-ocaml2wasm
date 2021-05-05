@@ -1,7 +1,5 @@
-let isqrt n =
-   let rec isqrt' x prevx =
-      match prevx - x with
-       | 0 -> x
-       | _ -> isqrt' ((x + n / x) / 2) x
-   in isqrt' n 0
-in isqrt 100
+let rec isqrt n =
+  if n = 1 then 1
+  else let n' = isqrt (n - 1) in
+    (n' + (n / n')) / 2
+in isqrt 1

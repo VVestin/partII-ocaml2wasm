@@ -162,7 +162,7 @@ const main = async () => {
    ).instance
 
    const wasm = instance.exports
-   const memory = new Uint32Array(wasm.heap.buffer, 0, 50)
+   const memory = new Uint32Array(wasm.heap.buffer)
 
    const output = wasm.main()
    console.log(memory)
