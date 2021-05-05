@@ -29,26 +29,26 @@
    - How does what I did compare to standard practice
 
 ### Background
-- How does webassembly work
-    - JIT compiling JS and the V8 Engine
-    - Overview of what WebAssembly is
-    - Stack Machine w/ heap and 2/4 basic types
-    - Talk about the important features of wasm for reference in the implementation chapter
-    - WebAssembly Binary Toolkit use
-- Talk about decision to use JavaScript
-   - Running in Node/browsers possibilities
-- Talk about ocamllex and ocamlyacc and jison
-- Alternatives to using the ocaml compiler (ocaml to js, vanilla js) for reference in evaluation chapter
+- [x] How does webassembly work
+    - [x] JIT compiling JS and the V8 Engine
+    - [x] Overview of what WebAssembly is
+    - [x] Stack Machine w/ heap and 2/4 basic types
+    - [x] Talk about the important features of wasm for reference in the implementation chapter
+    - [ ] WebAssembly Binary Toolkit use
+- [x] Talk about decision to use JavaScript
+   - [x] Running in Node/browsers possibilities
+- [x] Talk about ocamllex and ocamlyacc and jison
+- [x] NOT NEEDED CAN DESCRIBE BRIEFLY IN EVALUATION: Alternatives to using the ocaml compiler (ocaml to js, vanilla js) for reference in evaluation chapter
 ### Requirements
-- Description of OCaml subset
-- Development of sample programs
-- Setup tools for automated testing
-- Benchmarking for evaluation
+- [ ] Description of OCaml subset
+- [ ] Development of sample programs
+- [ ] Setup tools for automated testing
+- [ ] Benchmarking for evaluation
 ### Engineering
-- Iterative Development (instead of waterfall)
-- Test Driven Development
-- Kanban organizational technique
-- Source control/backup tools
+- [ ] Iterative Development (instead of waterfall)
+- [ ] Test Driven Development
+- [ ] Kanban organizational technique
+- [ ] Source control/backup tools
 
 ## Implementation
 (notes):
