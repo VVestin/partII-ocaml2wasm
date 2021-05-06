@@ -40,15 +40,15 @@
 - [x] Talk about ocamllex and ocamlyacc and jison
 - [x] NOT NEEDED CAN DESCRIBE BRIEFLY IN EVALUATION: Alternatives to using the ocaml compiler (ocaml to js, vanilla js) for reference in evaluation chapter
 ### Requirements
-- [ ] Description of OCaml subset
-- [ ] Development of sample programs
-- [ ] Setup tools for automated testing
-- [ ] Benchmarking for evaluation
+- [x] Description of OCaml subset
+- [x] Development of sample programs
+- [x] NOT NEEDED: Setup tools for automated testing
+- [ ] TODO AFTER EVALUATION: Benchmarking for evaluation
 ### Engineering
-- [ ] Iterative Development (instead of waterfall)
-- [ ] Test Driven Development
-- [ ] Kanban organizational technique
-- [ ] Source control/backup tools
+- [x] Iterative Development (instead of waterfall)
+- [x] Test Driven Development
+- [x] Kanban organizational technique
+- [x] Source control/backup tools
 
 ## Implementation
 (notes):

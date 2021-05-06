@@ -2,10 +2,14 @@
 \documentclass[12pt,a4paper,twoside,openright]{report}
 \usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
 \usepackage[margin=25mm]{geometry}  % adjusts page layout
-\usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{verbatim}
 \usepackage{docmute}   % only needed to allow inclusion of proposal.tex
 \usepackage{hyperref}
+\usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
+\usepackage{mwe}
+\usepackage{float}
+
+\graphicspath{ {images/} }
 
 \raggedbottom                           % try to avoid widows and orphans
 \sloppy
@@ -90,11 +94,6 @@ extent for a comparable purpose.
 
 \listoffigures
 
-\newpage
-\section*{Acknowledgements}
-
-TODO
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % now for the chapters
 
@@ -115,7 +114,7 @@ Finally, we will look at the software engineering practices used to minimize ris
 \subsection{WebAssembly}
 
 In the introduction, we talked about the role of WebAssembly as an alternative execution environment for web browsers to JavaScript.
-Now, we're going to dive a bit deeper into how WebAssembly works for reference in laters chapters.
+Now, we're going to dive a bit deeper into how WebAssembly works for reference in later chapters.
 At a high level, WebAssembly is a general purpose specification and binary instruction format.
 The instruction set is quite low level, resembling assembly languages to take advantage of hardware and run at near native speeds.
 That said, it's not specific to any architecture, and is designed to run on a stack-based virtual machine, giving it portability along with speed and efficiency.
@@ -210,7 +209,7 @@ type IntTree = Leaf | Branch of IntTree * int * IntTree \end{verbatim}
    \item
       Branching with {\tt if-then-else}. This is not strictly necessary syntax since we have {\tt match-with}, but it's useful syntactic sugar
    \item
-      Pattern matching using {\tt match-with}. This is key because it's the only way to estructure tuple and variant types. Full patterns should be supported.
+      Pattern matching using {\tt match-with}. This is key because it's the only way to structure tuple and variant types. Full patterns should be supported.
 
 \end{itemize}
 \subsection{Sample Programs}
@@ -220,9 +219,115 @@ Compiling and running these programs to get the correct result is part of the su
 These are essentially end-to-end tests of the system.
 So here is a list of the sample programs to be implemented before starting work on the compiler:
 \begin{itemize}
-   \item Fibonacci Numbers
+   \item Factorial (Recursive)
+   \item Fibonacci Numbers (Recursive)
    \item Integer Square Root (Newton's Method)
+   \item Grandpa's Age Puzzle (Generate and Test)
+   \item Binary Search Tree Insertion / Deletion / Lookup
+   \item 8 Queens Problem (Backtracking Search)
+   \item Quicksort
 \end{itemize}
+Most of these are well-known computer science problems with the exception of Grandpa's Age Puzzle.
+The puzzle is to find the ages (between 10 and 99 years) of a grandpa and his grandson which meet two conditions: The grandpa's age must be 4 times the grandson's age, and the reverse (18 $\rightarrow$ 81) of the grandson's age must be 3 times the reverse of the grandpa's age.
+The ages 18 and 72 are one solution to this puzzle.
+This problem was selected because it can be solved using the common generate-and-test pattern.
+
+\subsection{Benchmarking}
+Another requirement of this project is benchmarking the compiler in order to evaluate what has been created, and whether it successfully allows programmers to write OCaml for the web as an alternative to JavaScript.
+
+TODO: finish this once I've done the evaluation
+
+\section{Software Engineering}
+In this section, we'll talk about the engineering tools and practices used to execute this project.
+\subsection{Spiral Model}
+\begin{figure}[tbh]
+\centerline{\includegraphics{waterfall}}
+\caption{Software Development Lifecycle Using the Waterfall Model}
+\label{waterfallfig}
+\end{figure}
+The classic approach to software development is to use a linear "Waterfall" methodology, stepping through all the essential parts of the software development lifecycle.
+These key phases include the following: Requirements gathering, Design, Implementation, Testing, and finally Deployment/Maintenance.
+Upfront, a timeline for the entire project is specified, allocating maybe 30\% of the project for planning, 40\% for coding the implementation, and the rest for testing/bugfixes and deployment.
+Focussing on one complete phase at a time helps to ensure the entire product is cohesive and all the interacting parts have been designed with the whole project in mind.
+This type of top-down approach works well when a project is routine, having well-understood requirements that are unlikely to change.
+
+In general, the goal of a software engineering methodology is to minimize risk.
+Conventional project management wisdom says that the closer that errors are found to when they were introduced means the least risk to the project's completion.
+Conversely, the longer that an error persists, the greater the damage, with errors that make it into the release resulting in a product that either doesn't work or solves the wrong problem and wasn't what the client actually wanted.
+A large disadvantage with the waterfall method is that errors in the design won't be caught until months or possibly years later when testing finally starts.
+Catching and correcting design errors, even more so than difficult coding bugs can cost months of redesign and reimplementation.
+For certain types of projects, it's very common for a client to realize that what they've asked for isn't what they really wanted only after seeing a completed product.
+With the waterfall approach, where the client is only able to see the software after it's been fully implemented and tested, it's often too late or too expensive to make requirements changes.
+
+\begin{figure}[tbh]
+\centerline{\includegraphics[height=1.75in]{iterative}}
+\caption{Software Development Lifecycle Using an Iterative Model}
+\label{iterativefig}
+\end{figure}
+The spiral model was created to minimize risk by catching mistakes in the design and implementation closer to where they were introduced by producing multiple prototypes of the software.
+The spiral model is an iterative approach as shown in Figure~\ref{iterativefig}, where we've taken the full waterfall lifecycle and repeated it on a small scale.
+The spiral model also entails creating prototype of the full system from each cycle, even if many components are bare-bones or have to be mocked up.
+The testing and evaluation of one iteration (or sprint) leads directly into the planning of the next iteration, allowing feedback to be taken on during development instead of after.
+This also helps to catch problems with the integration and cohesion of different components that might not be found if end-to-end tests can't be run until the end of the project.
+This is key to solving really hard problems where you're doing something that has never been done before, and it's often the case that the faster you fail, the faster you can succeed.
+One possible disadvantage of the spiral method is that some effort might be wasted on prototyping components that much be re-written for the full implementation, but ideally the benefits of testing the full system outweigh this cost.
+
+So, how does this all apply to an undergraduate dissertation undertaken by one a 1 person team?
+Writing a compiler is a well-studied and understood task, with requirements documented by the project proposal that shouldn't change, which might lend itself to the waterfall method.
+At the same time, the interactions between the components of a compiler can be complicated, with changes to the parser output greatly effecting code generator and vice versa.
+The proposal is also specifying more like 1.5 projects, with the optional extension as an iterative addition to a finished base project.
+The hard submission deadline with harsh penalties for being late also drove me away from a waterfall approach where errors found at the end of the project causing large delays are not acceptable.
+So it made sense to me to use the spiral approach or creating a full compiler every few weeks with larger and larger subsets of OCaml until the base project and possibly extensions were finished.
+Having a prototype of the compiler would also allow me to get better feedback from my supervisor with full demonstrations of progress.
+Some effort was wasted prototyping components that would later be fully rewritten, but these the lessons learned from these prototypes were invaluable in writing the full compiler.
+
+\subsection{Test Driven Development}
+Test Driven Development (TDD) describes a broad set of practices with the common element that tests are written before what they're testing has been implemented.
+This is often most effective when applied at the scale of unit tests, but can also apply to end-to-end tests as in the case of this project.
+So, what are the benefits of writing tests first?
+For a 1 person project like mine, writing your own tests can leave large blind spots.
+If I've just spent days implementing some functionality, I can hardly test my implementation as if it's a black-box and edge cases missed in the implementation will likely be missed by the tests as well.
+Writing tests is also in a sense part of the design process, forcing the programmer to consider the requirements of a component before they start coding.
+Another benefit of having tests before you start coding is that you know you've finished once the tests all pass, and any extra work or refactoring is optional.
+There's also the obvious benefit that you end up with lots of tests that are not just an afterthought, but can play an active part in the development process.
+
+For these reasons, I started my project by writing the sample OCaml programs described above, adding tests for the expected output, and setting up automated end-to-end testing using the JavaScript test framework Mocha.
+Having these sample programs was also invaluable for evaluating the compiler against JavaScript versions of the same programs and against the JS\_of\_OCaml compiled versions.
+I started the project by writing smaller unit tests for the parser and code generator, but did not keep up with this formal testing through development.
+
+\subsection{Kanban Organizational Technique}
+
+\begin{figure}[H]
+   \centering
+   \begin{minipage}{0.45\textwidth}
+      \centering
+      \includegraphics[height=1.5in]{kanban-early}
+      \caption{The kanban board early in development}
+   \end{minipage}\hfill
+   \begin{minipage}{0.45\textwidth}
+      \centering
+      \includegraphics[height=1.5in]{kanban-late}
+      \caption{The kanban board later in development}
+   \end{minipage}
+\end{figure}
+Kanban is a popular method for managing workflows in software engineering.
+It can be complicated or simple, but the important feature is you have a visual system for tracking tasks through your workflow.
+For my project, this was a wall with sticky notes representing small tasks that needed to be completely for the project taking max a couple of hours.
+Breaking the project into these small units is helpful for managing and tracking progress.
+My board hard 4 columns: To Do, Today, Blocked, and Done.
+At the start of an iterator (or a milestone from the project proposal), the To Do column should be filled with all the tasks necessary to reach finish this iteration's prototype.
+Then on a given day spent working on the project, I would select a number of tasks proportional to the time I have to work and move them to the Today column.
+If there was something blocking my progress, such as waiting for an answer to a question from my supervisor or another task needing to be completed first, that sticky note would be moved to the Blocked column.
+Finally, completed tasks are moved to the done column.
+Some of the organizational benefits of using kanban were lost because I'm not working on a team and the scope of the project was probably manageable without this tool, but it still served a purpose for my personal organization and juggling completing several tasks in parallel.
+
+\subsection{Source Control / Backup}
+Git was used for both source control with Github as a remote host and backup solution.
+Backup was important for this project in the unlikely case that something happens to the files on my local machine, I won't lose all progress.
+The project is publicly hosted on github and can be downloaded here in the case of disaster: \url{https://github.com/VVestin/partII-ocaml2wasm}.
+Git was a necessary tool on this project for tracking changes to the source code and organizing those changes in to meaningful commits.
+Commits then become the tangible unit for thinking about progress on the project allowing us to checkout a commit to see a snapshot of the project at a certain point, remove a commit from the history to undo a set of errant changes, or organize the project into branches of related work to be developed in parallel.
+The collaborative benefits of Git and Github weren't realized by this work on the project, but could be used in future efforts to improve the compiler.
 
 \chapter{Implementation}
 
