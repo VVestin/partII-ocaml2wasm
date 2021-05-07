@@ -61,6 +61,45 @@
 - What was achieved, what does it do
     - Explain the limitations (gosh, there's a lot)
 
+### Repository Overview
+- Pipeline Overview
+- The file structure
+    - 5 important js files
+    - tests
+    - tests/samples/
+    - package.json
+    - docs
+    - dist
+    - app.js
+### Parsing
+- The general grammar
+   - ambiguous expr v1
+   - Juxtaposition Operator
+   - unambiguous expr v2
+### Code Transformations
+- Match Transformation
+- Let Transformation
+### Type Checking/Inference
+- What is the Wand algorithm
+    - Annotate
+    - Constrain
+    - Solve
+- Dealing with polymorphism
+- Tuple projection operator
+### Code Generation
+- comp() signature explanation
+- runtime environment
+   - heap allocation
+   - funcref table
+   - error function
+- Closures, environments
+- recursive functions
+### Main
+- Glues together the pipeline
+- Executing the webassembly
+- Pretty-printing
+- Value extraction
+
 ## Evaluation
 (notes):
 - Explain evaluation methods
