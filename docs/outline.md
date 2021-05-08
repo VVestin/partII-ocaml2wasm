@@ -72,28 +72,27 @@
     - dist
     - app.js
 ### Parsing
-- [ ] The general grammar
-   - [ ] ambiguous expr v1
-   - [ ] Juxtaposition Operator
-   - [ ] unambiguous expr v2
+- [x] The general grammar
+   - [x] ambiguous expr v1
+   - [x] Juxtaposition Operator
 ### Code Transformations
-- Match Transformation
-- Let Transformation
+- [x] Match Transformation
+- [x] Let Transformation
 ### Type Checking/Inference
-- What is the Wand algorithm
-    - Annotate
-    - Constrain
-    - Solve
-- Dealing with polymorphism
-- Tuple projection operator
+- [x] What is the Wand algorithm
+    - [x] Annotate
+    - [x] Constrain
+    - [x] Solve
+- [x] Dealing with polymorphism
+- [ ] TODO: NOT NEEDED? Tuple projection operator
 ### Code Generation
-- comp() signature explanation
-- runtime environment
-   - heap allocation
-   - funcref table
-   - error function
-- Closures, environments
-- recursive functions
+-[x] comp() signature explanation
+- [x] runtime environment
+   - [x] heap allocation
+   - [x] funcref table
+   - [ ] error function
+- [x] Closures, environments
+- [x] recursive functions
 ### Main
 - Glues together the pipeline
 - Executing the webassembly

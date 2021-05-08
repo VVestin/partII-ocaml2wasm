@@ -488,8 +488,75 @@ There is however, a bit of polymorphism to comment on within the type inference 
 Our subset of OCaml includes comparison operators which operate on several comparable types, as well as match-errors which can take any type.
 For these constructs, there are two special types {\tt 'COMP'}, which unifies with {\tt 'INT'}, {\tt 'FLOAT'}, and {\tt 'BOOL'} types as well as the {\tt 'ANY'} type which unifies with every type.
 Some care must be taken in the constraint-solving phase that a type should take on the most specific type which we have found for it.
+
 \section{Code Generation}
-\section{The Rest... TODO better title}
+Code generation is the final stage of compilation, taking transformed and typed AST and producing executable Wasm code in the {\tt .wat} format.
+Code generation all runs through one function in {\tt comp.js} conveniently also called {\tt comp}
+
+First, I'll describe the {\tt comp()} function's signature, and then we can dive into how it works.
+There are 3 parameters: {\tt ast}, {\tt ctx}, and {\tt depth}.
+AST is self-explanatory and ctx and depth are used to generate code for looking up variables in the context/environment.
+There are also 3 values returned from compiling an expression: {\tt code}, {\tt defs}, and {\tt localDefs}.
+{\tt code} is the code that computes the expression, {\tt defs} is a collection of function definitions needed to execute the code, and {\tt localDefs} is code for defining local variables used by the code.
+{\tt localDefs} is returned separate from the code because local definitions must appear at the beginning of a Wasm function.
+
+Generating stack based code for the basic operations is quite trivial.
+For a {\tt '+'} expression, we recursively take the code for the left subexpression, append the code for the right subexpression, and then append the line "{\tt  i32.add}".
+The two values computed by the sub-expressions will be left on the top of the stack and the add instruction will add pop the top two values and push back on their sum.
+
+Generating code for more complicated expressions requires support from additional data structures and helper functions.
+This code and data that accompany the generated code is our runtime, which for our compiler is about 70 lines of WebAssembly added to every compiled file.
+Our runtime mainly assists programs with doing two things: allocating memory on the heap and creating and applying functions.
+
+\subsection{Memory Management}
+For memory management, we have a very simple bump allocator.
+There are proposals for extending WebAssembly to have garbage-collecting features, so in the future more sophisticated memory management might be possible without too much modification of our compiler.
+But for now, we allocate a piece of memory for our runtime heap, which can be accessed from the outside JavaScript.
+Exposed internally is a global variable {\tt \$heap\_ptr} which points to the next free byte on the heap.
+Bytes on the heap can be interpreted either as {\tt i32}s or {\tt f32}s, and because OCaml is strongly typed, we always know the type of data we've stored.
+
+Besides our 3 primitive types, we have 3 heap-allocated types: functions, tuples, and datatypes.
+We'll look at tuple and datatype creation now and show how functions are implemented in the next section.
+Values of every type conveniently take up 4 bytes (1 word for our case), either as a direct value or a pointer onto the heap.
+To construct an n-tuple, we simply allocate n words on the heap, store the top n-values on the stack into our tuple, and lastly push the address of the tuple onto the stack.
+To project from a tuple, we simply load from the heap at the appropriate offset from the tuple's value.
+Datatypes are nearly a special case of tuples where the index of the constructor used is stored on the heap along with the constructor's argument.
+When a constructor is used in a pattern-match, we load the first word from the 2-tuple and compare it to the fixed index of the constructor.
+To extract the constructor's argument, we simply load the second word.
+
+\subsection{Functions and Closures}
+To implement a functional language OCaml, function pointers and indirect calls are essential.
+Luckily WebAssembly allows us to declare a funcref table and do indirect calls to functions in that table.
+Each function in the collection of function definitions returned by {\tt comp()} adds its function to the top-level and adds an entry to the function table.
+Function values are represented by closures, which are a pair consisting of an index into the function table and an environment pointer.
+Closures get their name because a function value closes over the variables in it's environment at the time of it's creation.
+Without this feature of functional languages, important techniques like currying would not be possible because a function wouldn't save the state of surrounding variables at its creation.
+In our implementation, the environment is a linked-list containing the value of every variable up to the root which has no defined variables.
+The syntactic depth of a function expression is the same as the length of this environment list because that is the number of variables accessible at the time of function creation.
+By syntactic depth, I mean the number of function definitions surrounding the code in the source program.
+This relies on the fact that OCaml functions have exactly 1 formal parameter.
+
+The environment linked-list accessible with every function is the reason for the {\tt depth} argument of {\tt comp()}.
+The current syntactic depth, as well as the depth of each variable needs to be kept track of so that we can traverse the environment list to get a variables value.
+The {\tt ctx} variable to {\tt comp} contains a map from identifiers to the depth of the function declaring that variable.
+For example, if we are looking up an identifier declared at depth 3 and we're currently at depth 5, then the code generated to access that variable must traverse back 2 nodes on the environment list.
+So, when compiling a function expression, we must add the function parameter's identifier to the context with it's value as the current depth and increase the depth by 1 when compiling the function's body.
+When the function looks up it's own argument's value, it doesn't have to follow any pointers in the environment list, it only has to load the value from the first node.
+
+To apply a function value to an argument, we need to allocate a new node in the environment list to store the argument's value.
+That new node points to the function's environment as the rest of it's linked-list.
+To call the function, we extract the index into the funcref table from the closure and do an indirect call using that index with the environment list as the argument.
+WebAssembly handles all the work managing the call-stack and leaving the result of the called function on the stack after it returns.
+
+The last piece of the puzzle to address is recursive functions.
+Recursive functions can only be declared with a {\tt let rec} binding.
+In the translation stage where let bindings are transformed, a metadata is added to the definition of a recursive function, which marks a function as recursive and notes the identifier it has to refer to itself.
+This information is also used in the type algorithm while adding identifiers to the context there.
+To give a recursive function access to its own closure, we add an element to the environment list for that function.
+This addition to the environment is also reflected in the {\tt ctx} and {\tt depth} parameters of {\tt comp()}.
+Whenever a closure of a recursive function is created, we just allocate an extra node on its environment list with the function's index in the funcref table.
+This addition of an extra variable lets us have single-recursive functions (our subset of OCaml does not include mutual-recursion, although it would be possibly by adding multiple entries to the environment).
+
 \section{A Worked Example}
 
 \chapter{Evaluation}
