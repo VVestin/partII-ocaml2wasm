@@ -72,10 +72,10 @@
     - dist
     - app.js
 ### Parsing
-- The general grammar
-   - ambiguous expr v1
-   - Juxtaposition Operator
-   - unambiguous expr v2
+- [ ] The general grammar
+   - [ ] ambiguous expr v1
+   - [ ] Juxtaposition Operator
+   - [ ] unambiguous expr v2
 ### Code Transformations
 - Match Transformation
 - Let Transformation
