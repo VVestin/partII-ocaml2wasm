@@ -8,6 +8,7 @@
 \usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{mwe}
 \usepackage{float}
+\usepackage{enumerate}
 
 \graphicspath{ {images/} }
 
@@ -438,6 +439,55 @@ So translating let expressions into function applications, is quite straightforw
 These two translations for match and let allow us to extend the syntax of the language without having to add additional cases to the type inference algorithm or the code generator, which would be a significant amount of work.
 Instead, we can piggy-back off already implemented code for function application and {\tt if-then-else}.
 \section{Type Checking/Inference}
+For type inference, I've used a 3 phase constraint-based approach resembling some of the data-flow analysis algorithms taught in the part II optimising compilers course.
+This resemblance makes sense because type inference can be considered a data-flow analysis, where the flow of types is based on the semantics of the OCaml type rules.
+The 3 phases of the type inference algorithm are as follows: annotate, constrain, solve.
+
+\subsection{Annotate}
+Annotation is the simplest phase, whose role is to give every node in the AST a type-variable which will later be replaced by a concrete type.
+This is almost as trivial as traversing the AST object and adding a {\tt "type"} property with a uniquely generated type-variable to each node.
+The only complication is that instances of the same identifier should have the same type-variable.
+To accomplish this, we keep track of an environment, and every time a new identifier is declared, a new type-variable is generated and added to the environment attached to the new variable.
+Then when an we are annotating an identifier, we look-up it's type-variable in the environment.
+If the identifier is not found, then we report an error because this identifier has not been declared.
+\subsection{Constrain}
+In the constrain phase, we use the typing rules of the language to generate constraints on the types in the AST.
+A constraint is represented by a pair of types which must unify with each other.
+In the simplest case, where we are constraining the expression {\tt \{tokenName: "INT\_LITERAL", type: "t13", val: 42\}}, we would generate the constraint pair {\tt ("t13", "INT")}.
+As another example, if we have a function application {\tt app}, where that application has a {\tt func} and an {\tt arg}, we would generate the following constraint pair: {\tt (func.type, \{type: 'FUNC', fromType: arg.type, toType: app.type\})}.
+Generating these constraints correlates exactly with applying rules in the formal type system.
+So, to generate all the constraints, we traverse the AST accumulating these pairs for each node in the AST, with some nodes such as {\tt if-then-else} generating multiple constraints.
+
+\subsection{Solve}
+The final step in our algorithm is to solve the system of constraints and associate a concrete type with each type-variable generated in the annotate stage.
+With this solution, we can substitute the concrete types back into the AST.
+Our solution takes the form of a map from type-variables to types.
+Below is algorithm for generating a solution from a set of constraints:
+\begin{enumerate}
+   \item Initialize the solution to an empty map.
+   \item Repeat for each constraint.
+      \begin{enumerate}[i.]
+         \item Apply the substitutions in the current solution to update our constraint.
+         \item Unify the two sides of the constraint to generate a set of new substitutions.
+         \item Apply the new substitutions to our current solution.
+         \item Add new substitutions to the solution if they didn't exist.
+      \end{enumerate}
+\end{enumerate}
+Two subroutines of the above algorithm are unifying two types and applying a set of substitutions to a type.
+Unification is done with the classic unification algorithm, recursively unifying two types and generating a substitution when type-variables are found.
+If the types can't be unified, then the constraints have no solution, and therefore the program has a type error, which we can report.
+Substituting a solution map into a type is also as simple as traversing the type looking for type-variables that are in our solution and doing a lookup.
+
+\subsection{Polymorphism}
+The above algorithm is already nearly equipped to handle polymorphic types.
+If there a type cannot be constrained to a concrete type, the algorithm will end up with type variables which for the polymorphic types.
+However, significant work would have to be done on the code generation side to accommodate polymorphism.
+For that reason, our subset of OCaml does not support polymorphism.
+
+There is however, a bit of polymorphism to comment on within the type inference algorithm.
+Our subset of OCaml includes comparison operators which operate on several comparable types, as well as match-errors which can take any type.
+For these constructs, there are two special types {\tt 'COMP'}, which unifies with {\tt 'INT'}, {\tt 'FLOAT'}, and {\tt 'BOOL'} types as well as the {\tt 'ANY'} type which unifies with every type.
+Some care must be taken in the constraint-solving phase that a type should take on the most specific type which we have found for it.
 \section{Code Generation}
 \section{The Rest... TODO better title}
 \section{A Worked Example}
