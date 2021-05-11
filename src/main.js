@@ -21,7 +21,12 @@ const prettyPrint = (prefix, ast) => {
    else if (ast.tokenName == 'IDENTIFIER')
       console.log(prefix, 'ID', ast.id, ':', prettyType(ast.type))
    else if (ast.tokenName == 'UNARY_OP') {
-      console.log(prefix, ast.op, ':', prettyType(ast.type))
+      console.log(
+         prefix,
+         ast.op + (ast.op == 'NTH' ? `(${ast.n})` : ''),
+         ':',
+         prettyType(ast.type)
+      )
       prettyPrint(prefix + '--', ast.operand)
    } else if (ast.tokenName == 'INFIX_OP') {
       prettyPrint(prefix + '--', ast.lhs)
@@ -92,7 +97,6 @@ const accessMemory = (memory, loc, type) =>
    type == 'FLOAT' ? ieee32ToFloat(memory[loc]) : memory[loc]
 
 const extract = (val, t, memory, datatypes) => {
-   console.log('extracting', val, t)
    if (t == 'INT') return val
    else if (t == 'FLOAT') return val
    else if (t == 'BOOL') return Boolean(val)
@@ -108,23 +112,27 @@ const extract = (val, t, memory, datatypes) => {
    else if (typeof t == 'string' && t.startsWith('$type-')) {
       const datatype = datatypes[t.slice(6)]
       const constr = datatype[memory[val / 4]]
+      const param = constr.paramType && {
+         param: extract(
+            accessMemory(memory, val / 4 + 1, constr.paramType),
+            constr.paramType,
+            memory,
+            datatypes
+         ),
+      }
+      if (constr.name == 'Nil') return []
+      else if (constr.name == 'Cons') {
+         return [param.param[0], ...param.param[1]]
+      }
       return {
          constructor: constr.name,
-         ...(constr.paramType && {
-            param: extract(
-               accessMemory(memory, val / 4 + 1, constr.paramType),
-               constr.paramType,
-               memory,
-               datatypes
-            ),
-         }),
+         ...param,
       }
    }
 }
 
-const main = async () => {
-   // Parsing
-   const ir = parse(process.argv[2])
+const generateWasm = async input => {
+   const ir = parse(input)
    console.log('DONE PARSING \n\n')
    console.log('ast', ir.ast)
    console.log()
@@ -140,6 +148,7 @@ const main = async () => {
 
    prettyPrint('', ir.ast)
 
+   //return { ir }
    // Compiling
    const wat = comp(ir)
    console.log(wat)
@@ -148,26 +157,41 @@ const main = async () => {
    const wabt = await require('wabt')()
    const wasmModule = wabt.parseWat('foo', wat) //hmm, why foo?
    wasmModule.validate()
-   const instance = (
-      await WebAssembly.instantiate(wasmModule.toBinary({}).buffer, {
-         imports: {
-            print: console.log,
-            error: () => {
-               console.error(
-                  'Error occurred at runtime, probably a match error'
-               )
+   return {
+      ir,
+      instance: (
+         await WebAssembly.instantiate(wasmModule.toBinary({}).buffer, {
+            imports: {
+               print: console.log,
+               error: () => {
+                  console.error(
+                     'Error occurred at runtime, probably a match error'
+                  )
+               },
             },
-         },
-      })
-   ).instance
+         })
+      ).instance,
+   }
+}
+
+const compileAndRun = async input => {
+   const { ir, instance } = await generateWasm(input)
+   if (!instance) return
+   //console.log('instance', instance)
 
    const wasm = instance.exports
    const memory = new Uint32Array(wasm.heap.buffer)
 
+   const t0 = process.hrtime()
    const output = wasm.main()
-   console.log(memory)
+   const time = process.hrtime(t0)
+   //console.log(memory)
    console.log('main', output, ':', prettyType(ir.ast.type))
-   console.log('extracted', extract(output, ir.ast.type, memory, ir.datatypes))
+   return { value: extract(output, ir.ast.type, memory, ir.datatypes), time }
 }
+if (require.main === module)
+   (async () => {
+      console.log('extracted', await compileAndRun(process.argv[2]))
+   })()
 
-main()
+module.exports = { compileAndRun }

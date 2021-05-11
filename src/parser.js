@@ -12,7 +12,7 @@ const KEYWORDS = (
    'try type val virtual when while with'
 ).split(' ')
 
-const grammar = fs.readFileSync('ocaml.jison')
+const grammar = fs.readFileSync('src/ocaml.jison')
 const parser = new jison.Parser(String(grammar))
 parser.yy.makeInfix = (op, lhs, rhs) => ({
    tokenName: 'INFIX_OP',

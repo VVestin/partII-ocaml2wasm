@@ -3,6 +3,8 @@
 /*op-char ("!"|"$"|"%"|"&"|"*"|"+"|"-"|"."|"/"|":"|"<"|"="|">"|"?"|"@"|"^"|"|"|"~")*/
 %%
 \s+                        /* skip whitespace */
+"(*"([^*]|[\n]|(\*+([^*)]|[\n])))*\*+")"
+                           /* skip comments */
 "-"?[0-9][0-9_]*("."[0-9_]+)(("e"|"E")("+"|"-")?[0-9][0-9_]*)?
                            return 'FLOAT_LITERAL';
 "#"[0-9][0-9_]*            return 'NTH'
@@ -14,12 +16,12 @@
 "-""."?                    return '-';
 "*""."?                    return '*';
 "/""."?                    return '/';
+"="                        return '=';
+"<>"|"!="                  return '!=';
 "<="                       return '<=';
 "<"                        return '<';
 ">="                       return '>=';
 ">"                        return '>';
-"!="                       return '!=';
-"="                        return '=';
 "("                        return '(';
 ")"                        return ')';
 "&&"                       return '&&';
@@ -44,6 +46,7 @@
 "bool"                     return 'bool';
 "of"                       return 'of';
 "mod"                      return 'mod';
+";;"                       return ';;';
 [a-zA-Z_][a-zA-Z_0-9']*    return 'ident';
 
 /lex
@@ -80,7 +83,11 @@ expr:
       {$$ = {tokenName: 'FUNC', param: $2, body: $4}}
  | 'let' let-binding 'in' expr
       {$$ = {tokenName: 'LET', rec: false, binding: $2, body: $4}}
+ | 'let' let-binding ';;' expr
+      {$$ = {tokenName: 'LET', rec: false, binding: $2, body: $4}}
  | 'let' 'rec' let-binding 'in' expr
+      {$$ = {tokenName: 'LET', rec: true, binding: $3, body: $5}}
+ | 'let' 'rec' let-binding ';;' expr
       {$$ = {tokenName: 'LET', rec: true, binding: $3, body: $5}}
  | 'match' expr 'with' pattern-matching
       {$$ = {tokenName: 'MATCH', expr: $2, clauses: $4}}

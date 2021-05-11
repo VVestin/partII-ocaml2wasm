@@ -51,7 +51,8 @@ const inferTypes = ({ ast, datatypes, constructorTypes }) => {
          })
       }
    )
-   console.log('constraints', constraints)
+   console.log('constraints:')
+   constraints.forEach(c => console.log(c))
    const types = solve(constraints)
    console.log(types)
    substitute(ast, types)
@@ -117,18 +118,16 @@ const constrain = (ast, constructorTypes) => {
          ...constrain(ast.operand),
       ]
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_INDEX') {
-      console.log([
-         { a: ast.operand.type, b: ast.constructor.returnType },
-         { a: ast.type, b: 'INT' },
-      ])
       return [
          { a: ast.operand.type, b: ast.constructor.returnType },
          { a: ast.type, b: 'INT' },
+         ...constrain(ast.operand),
       ]
    } else if (ast.tokenName == 'UNARY_OP' && ast.op == 'GET_ARG') {
       return [
          { a: ast.operand.type, b: ast.constructor.returnType },
          { a: ast.type, b: ast.constructor.paramType },
+         ...constrain(ast.operand),
       ]
    } else if (ast.tokenName == 'UNARY_OP') {
       return [
@@ -198,24 +197,26 @@ const solve = constraints => {
    //constraints = constraints.filter(({ a, b }) => !['COMP', 'ANY'].includes(b))
    //console.log('constraints without COMP', constraints)
    for (let constraint of constraints) {
-      console.log('solution', solution)
-      console.log('applying constraint', constraint)
-      console.log(
-         'updated constraint',
-         applySubstitutions(constraint, solution)
-      )
+      //console.log('solution', solution)
+      //console.log('applying constraint', constraint)
+      //console.log( 'updated constraint', applySubstitutions(constraint, solution))
       const substitutions = unify(applySubstitutions(constraint, solution))
       console.log('got substitutions', substitutions)
       for (let [tvar, t] of Object.entries(substitutions)) {
-         if (['COMP', 'ANY'].includes(t)) delete substitutions[tvar]
+         //if (['COMP', 'ANY'].includes(t) || t.varLength) delete substitutions[tvar]
       }
-      console.log('substitutions without COMP', substitutions)
+      //console.log('substitutions without COMP', substitutions)
       // updating solution
       for (let tvar of Object.keys(solution)) {
          solution[tvar] = applySubstitutions(solution[tvar], substitutions)
       }
       for (let tvar of Object.keys(substitutions)) {
-         if (!solution[tvar]) solution[tvar] = substitutions[tvar]
+         if (
+            !solution[tvar] ||
+            ['COMP', 'ANY'].includes(solution[tvar]) ||
+            solution[tvar].varLength
+         )
+            solution[tvar] = substitutions[tvar]
       }
       /*for (let tvar of Object.keys(substitutions)) {
          const newType = solution[tvar]
@@ -298,7 +299,9 @@ const applySubstitutions = (t, substitutions) => {
       }
    } else if (isTVar(t)) {
       // t is a type var, so replace it if there's a substitution for it
-      if (substitutions[t]) return substitutions[t]
+      const sub = substitutions[t]
+      if (sub && !['COMP', 'ANY'].includes(sub) && !sub.varLength)
+         return substitutions[t]
       else return t
    } else {
       throw new Error("Couldn't subsitute into type " + JSON.stringify(t))
@@ -311,7 +314,7 @@ const substitute = (ast, substitutions) => {
          'Node has already had its type replaced (duplicate node in tree) ' +
             JSON.stringify(ast)
       )*/
-   ast.type = substitutions[ast.type]
+   ast.type = substitutions[ast.type] || ast.type
    if (ast.tokenName == 'UNARY_OP') {
       substitute(ast.operand, substitutions)
    } else if (ast.tokenName == 'INFIX_OP') {
