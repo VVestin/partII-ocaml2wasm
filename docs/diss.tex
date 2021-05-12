@@ -618,6 +618,69 @@ So, without any optimizations such as tail-call optimizations, programs processi
 For this reason, we can't just run the tests on larger inputs to get longer times, and must deal with the low-precision millisecond timings for the \JSofOCaml tests.
 
 \section{Results}
+\subsection{Iterative Fibonacci}
+\begin{figure}[tbh]
+\centerline{\includegraphics[height=2in]{fib-iter-graph}}
+\caption{Execution time of iterative Fibonacci}
+\label{fib-iter-graph}
+\end{figure}
+As we can see in Figure~\ref{fib-iter-graph}, our WebAssembly compiler computes Fibonacci numbers about twice as fast as a handwritten JavaScript implementation.
+This is a good speedup especially considering there are no optimizations done on the WebAssembly, not even tail-recursion reduction which would greatly improve performance.
+At the same time, this shouldn't be too much of a surprise considering WebAssembly is much closer to a native instruction set.
+
+The WebAssembly runtime growth looks very linear as we should expect, with an $R^2 = 0.975$ for the line of best fit.
+The JavaScript graph is quite linear as well, except for the large jump around $n=50$.
+This sudden jump from one linear progression to a different one was quite puzzling, but there's a solid explanation, which relates back to the motivation of this project.
+The slowdown comes right after we try to compute $fib(49) = 4807526976$, which just so happens to be the first fibonacci number which overflows signed 32 bit integers, which are part of what JavaScript uses to represent it's {\tt Number} type.
+
+So why does hitting 32-bit overflow cause a slowdown for JavaScript and not WebAssembly?
+It's not because WebAssembly uses 64 bit integers, which would be possible, except my implementation uses {\tt i32}.
+When JavaScript a Number value has overflowed, it converts that Number to a float and proceeds with floats for the rest of the program.
+So, we get a slowdown after $n=50$ because from that point out JavaScript is doing slower floating point arithmetic.
+
+This JS behavior is yet another example of JavaScript's type system surprising us and coercing types while we're not looking to avoid errors.
+While in some cases automatically switching to use float representations might be very convenient and avoid bugs due to integer overflow, it can equally cause difficult to identify bugs.
+Once a Number has switched to using a float representation, using it in any arithmetic expression will coerce the other operand to be a float too and result in a float.
+This would be acceptable if floats were a subtype of integers, however there are many strange properties of floats that integers don't have.
+The unusual choice JavaScript makes to have a single Number type which may really be an int or a float only serves to disguise the complexity.
+As we've seen here, programmers must still be aware of the differences between the hidden float and integer types.
+Disguising complexity is far more dangerous than exposing it, and a can cause some difficult to diagnose issues that break the type system.
+This is a strong contrast with OCaml where entirely different operators are used on ints and floats and explicit conversion is needed to mix types at all.
+The goal being to trade a bit of extra typing and consideration when writing a program in order to save hours of debugging or even catch bugs that could've been released.
+
+\subsection{Recursive Fibonacci}
+\begin{figure}[tbh]
+\centerline{\includegraphics[height=2in]{fib-rec-graph}}
+\caption{Execution time of recursive Fibonacci}
+\label{fib-rec-graph}
+\end{figure}
+The recursive Fibonacci program suffers from the memory problem that prevents us from running it on large inputs.
+This is especially true for the recursive version because the recursive function calls branch and grow exponentially.
+That's why we could only run this up to $n=16$.
+Still, these 16 datapoints can tell us something about our compiler.
+There are two things to notice.
+First is that our {\tt Wasm\_of\_OCaml} compiled version still has a 2-3x speed advantage over the handwritten JavaScript running on V8.
+The other thing to notice is that within the small sample size, both curves fit the expected exponential growth.
+
+\subsection{Quicksort}
+\begin{figure}[tbh]
+\centerline{\includegraphics[height=2in]{quicksort-graph}}
+\caption{Execution time for quicksorting a shuffled list}
+\label{quicksort-graph}
+\end{figure}
+
+The runtimes for quicksort were long enough without running out of memory that I was able to include the results from \JSofOCaml in Figure~\ref{quicksort-graph}.
+Here, the performance of our compiled Wasm code is quite similar to the JavaScript implementation.
+While it's faster for most lists, there are some inputs where the handwritten JavaScript outperforms it.
+One reason for this may be that our OCaml implementation defines its own linked list datatype as well as operations on those lists, whereas JavaScript uses faster arrays with better optimized array functions.
+This is the largest program of the 3, so it's also possible the speed loss from not having any optimizations is greater for more complex programs.
+As we expected, \JSofOCaml is strictly slower than our handwritten JavaScript by a decent margin, although the lack of resolution makes it hard to compare.
+
+The relatively small number of tests and the high variability makes it difficult to draw conclusions about the shapes of the curves.
+A large part of the jaggedness is inherent in the quicksort algorithm, which is only $O(n \log n)$ in the average case.
+All 3 programs are run on the same randomized list for each input size, so the comparison is fair in that way, but the variation in how well the pivot divides the list in 2 makes it harder to fit a trend line.
+We can still conclude that it looks as if all 3 programs have similar time complexities that could follow a linearathmetic progression.
+In hindsight, mergesort may have given more stable and informative results.
 
 \section{Success Criteria}
 

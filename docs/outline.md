@@ -120,15 +120,15 @@
 - [x] Problems timing OCaml programs
    - [x] Memory concerns
 ### Timing results
-- [ ] fibonacci iterative
-   - [ ] floating point jump (JS bad (jk I love JS))
-   - [ ] trend line
-- [ ] fibonacci recursive
-    - [ ] limitations in range
-    - [ ] exponential shape
-- [ ] quicksort
-    - [ ] about a linearathmetic shape
-    - [ ] wasm_of_ocaml clearly beats js_of_ocaml and gets similar performance to JIT optimized JS
+- [x] fibonacci iterative
+   - [x] floating point jump (JS bad (jk I love JS))
+   - [x] trend line
+- [x] fibonacci recursive
+    - [x] limitations in range
+    - [x] exponential shape
+- [x] quicksort
+    - [x] about a linearathmetic shape
+    - [x] wasm_of_ocaml clearly beats js_of_ocaml and gets similar performance to JIT optimized JS
 ### Success Criteria
 - [ ] mocha test results
 - [ ] timing results match expected
