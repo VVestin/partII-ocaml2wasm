@@ -187,7 +187,7 @@ const compileAndRun = async input => {
    const output = wasm.main()
    const time = process.hrtime(t0)
    //log(memory)
-   console.log('main', output, ':', prettyType(ir.ast.type))
+   log('main', output, ':', prettyType(ir.ast.type))
    return { value: extract(output, ir.ast.type, memory, ir.datatypes), time }
 }
 if (require.main === module)

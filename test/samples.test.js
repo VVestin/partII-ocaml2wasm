@@ -14,7 +14,7 @@ describe('Sample programs', function () {
          fs.readFileSync(`test/samples/${sampleName}.ml`) + ' ' + input
       )
 
-      return compileAndRun(src)
+      return (await compileAndRun(src)).value
    }
    ;[
       ['int-arith', '', 8],

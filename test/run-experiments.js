@@ -54,21 +54,22 @@ const logOneLine = obj => {
    }
 }
 
-;(async () => {
-   const fibIter = await runTest('fib-iterative', function* () {
-      for (let i = 0; i < 45; i++) yield i
-   })
-   const fibRec = await runTest('fib-recursive', function* () {
-      for (let i = 0; i < 16; i++) yield i
-   })
-   const quicksort = await runTest('quicksort', function* () {
-      for (let i = 0; i < 60; i++)
-         yield new Array(i * 10 + 1)
-            .fill(0)
-            .map((_, x) => x)
-            .sort(() => Math.random() - 0.5)
-   })
-   logOneLine(fibIter)
-   logOneLine(fibRec)
-   logOneLine(quicksort)
-})()
+if (require.main == module)
+   (async () => {
+      const fibIter = await runTest('fib-iterative', function* () {
+         for (let i = 0; i < 45; i++) yield i
+      })
+      const fibRec = await runTest('fib-recursive', function* () {
+         for (let i = 0; i < 16; i++) yield i
+      })
+      const quicksort = await runTest('quicksort', function* () {
+         for (let i = 0; i < 60; i++)
+            yield new Array(i * 10 + 1)
+               .fill(0)
+               .map((_, x) => x)
+               .sort(() => Math.random() - 0.5)
+      })
+      logOneLine(fibIter)
+      logOneLine(fibRec)
+      logOneLine(quicksort)
+   })()
