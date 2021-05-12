@@ -130,8 +130,8 @@
     - [x] about a linearathmetic shape
     - [x] wasm_of_ocaml clearly beats js_of_ocaml and gets similar performance to JIT optimized JS
 ### Success Criteria
-- [ ] mocha test results
-- [ ] timing results match expected
+- [x] mocha test results
+- [x] timing results match expected
 
 ## Conclusion
 (notes):

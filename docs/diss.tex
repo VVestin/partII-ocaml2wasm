@@ -642,11 +642,6 @@ This JS behavior is yet another example of JavaScript's type system surprising u
 While in some cases automatically switching to use float representations might be very convenient and avoid bugs due to integer overflow, it can equally cause difficult to identify bugs.
 Once a Number has switched to using a float representation, using it in any arithmetic expression will coerce the other operand to be a float too and result in a float.
 This would be acceptable if floats were a subtype of integers, however there are many strange properties of floats that integers don't have.
-The unusual choice JavaScript makes to have a single Number type which may really be an int or a float only serves to disguise the complexity.
-As we've seen here, programmers must still be aware of the differences between the hidden float and integer types.
-Disguising complexity is far more dangerous than exposing it, and a can cause some difficult to diagnose issues that break the type system.
-This is a strong contrast with OCaml where entirely different operators are used on ints and floats and explicit conversion is needed to mix types at all.
-The goal being to trade a bit of extra typing and consideration when writing a program in order to save hours of debugging or even catch bugs that could've been released.
 
 \subsection{Recursive Fibonacci}
 \begin{figure}[tbh]
@@ -683,6 +678,33 @@ We can still conclude that it looks as if all 3 programs have similar time compl
 In hindsight, mergesort may have given more stable and informative results.
 
 \section{Success Criteria}
+\begin{figure}[tbh]
+   \centerline{\includegraphics[height=2in]{passed-tests}}
+\caption{Output from the mocha end-to-end test suite showing 12/12 passed}
+\label{passed-tests}
+\end{figure}
+From the project proposal, my success criteria was to show the compiler correctly compiles programs within the subset of OCaml into WebAssembly.
+The set of 12 sample programs certainly uses every feature in our small subset of OCaml and as Figure~\ref{passed-tests} shows, all sample programs pass our end-to-end tests.
+Developing the sample programs and setting up the mocha test framework to execute the tests before writing the compiler proved to be a useful exercise for both the implementation and evaluation of the compiler.
+
+Since my compiler is not optimising, it was not a part of the success criteria for our compiled output to outperform the JavaScript and \JSofOCaml alternatives.
+It's just an added bonus that according to the results above, our compiler gives a modest performance upgrade over writing JavaScript, and significantly beats \JSofOCaml for all programs.
+The real purpose of measuring performance was to verify the generated code is doing what we expect it to do and that the time complexity matches our expectations.
+For example, if we measured that our quicksort ran in better than $O(n \log n)$ time, we would know something had gone wrong in the code generation and our programs are not really correct.
+Luckily, the resulting curves matched the expected shapes well.
+
+In fact, the JavaScript results were the ones raising questions, considering the large jump in the iterative Fibonacci graph.
+As we found out, this was due to JavaScript changing the representation of numbers in our computation to be floats after the fibonacci numbers hit 32-bit integer overflow.
+This relates back to the motivation of our project, and highlights the benefits of OCaml's type system.
+
+The unusual choice JavaScript makes to have a single Number type which may really be an int or a float only serves to disguise the complexity.
+As we've seen here, programmers must still be aware of the differences between the hidden float and integer types.
+Disguising complexity is far more dangerous than exposing it and can cause some difficult to diagnose issues that break the type system.
+
+This is in strong contrast with OCaml where entirely different operators are used on ints and floats and explicit conversion is needed to mix types at all.
+The goal being to trade a bit of extra typing and consideration when writing a program in order to save hours of debugging or even catch bugs that could've been released.
+In this way, our compiler has been successful at least on a small scale.
+Even though the OCaml implementation of recursive Fibonacci is almost identical to the JavaScript version, our compiler made executing this program on the web both faster and safer by avoiding an unexpected type change for large values of $n$.
 
 \chapter{Conclusion}
 

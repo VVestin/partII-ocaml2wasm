@@ -10,4 +10,4 @@ let rec fizzbuzz n =
     | (_, _) -> None n
    in Cons (f, fizzbuzz (n - 1));;
 
-fizzbuzz 15
+fizzbuzz
