@@ -126,6 +126,8 @@ const transformMatch = constructorTypes => {
 
 const unifyPattern = (pattern, matcher, constructorTypes) => {
    log('unifying', pattern, matcher, constructorTypes)
+   if (pattern.tokenName == 'IDENTIFIER' && pattern.id == '_')
+      return { checks: [], decls: [] }
    if (pattern.tokenName == 'IDENTIFIER' && constructorTypes[pattern.id])
       return {
          checks: [
