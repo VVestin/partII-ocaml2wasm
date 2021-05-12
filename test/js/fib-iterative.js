@@ -5,4 +5,6 @@ const fib = n => {
    return b
 }
 
-console.log(fib(eval(process.argv[2])))
+const t0 = process.hrtime()
+fib(eval(process.argv[2]))
+console.log(process.hrtime(t0))

@@ -11,4 +11,6 @@ const quicksort = list => {
    return [...quicksort(left), list[0], ...quicksort(right)]
 }
 
-console.log(quicksort(process.argv[2].split(',').map(Number)))
+const t0 = process.hrtime()
+quicksort(process.argv[2].split(',').map(Number))
+console.log(process.hrtime(t0))
