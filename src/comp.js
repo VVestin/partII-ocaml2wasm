@@ -1,3 +1,5 @@
+const log = require('./logger')
+
 const INFIX_TO_WAT = {
    '+': 'i32.add',
    '*': 'i32.mul',
@@ -60,7 +62,7 @@ const compile = ir => {
    })()
 
    const comp = (ast, ctx = {}, depth = 0) => {
-      console.log('compiling', ast.tokenName, ctx, depth)
+      log('compiling', ast.tokenName, ctx, depth)
       if (ast.tokenName == 'INT_LITERAL')
          return { defs: {}, localDefs: '', code: `i32.const ${ast.val}\n` }
       else if (ast.tokenName == 'FLOAT_LITERAL')
@@ -209,13 +211,7 @@ get_global $heap_ptr
             throw new Error(`Unable to resolve identifier ${ast.id}`)
          const varDepth =
             ctx[ast.id] !== undefined ? ctx[ast.id] : ctx.$rec[ast.id]
-         console.log(
-            'varDepth',
-            varDepth,
-            ast.id,
-            ctx[ast.id],
-            ctx.$rec[ast.id]
-         )
+         log('varDepth', varDepth, ast.id, ctx[ast.id], ctx.$rec[ast.id])
          let code = `get_local $env ;; lookup ${ast.id}\n`
          code += `;; ${varDepth} - ${depth}\n`
          // TODO, this traversal could be a WASM function instead of adding linear code
@@ -274,7 +270,7 @@ ${indent(indent(elze.code.trim()))}
   (func $print4 (import "imports" "print") (param i32 i32 i32 i32))
   (func $print5 (import "imports" "print") (param i32 i32 i32 i32 i32))
 
-  (memory $heap (export "heap") 12)
+  (memory $heap (export "heap") 50)
   (global $heap_ptr (mut i32) (i32.const 4)) ;; start 1 byte in so 0 can be a null pointer
   (type $func_i32 (func (param i32) (result i32)))
   (type $func_f32 (func (param i32) (result f32)))

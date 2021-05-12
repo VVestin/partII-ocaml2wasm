@@ -1,6 +1,7 @@
 const fs = require('fs')
 const jison = require('jison')
 const util = require('util')
+const log = require('./logger')
 
 const KEYWORDS = (
    'and as assert asr begin class constraint' +
@@ -28,7 +29,7 @@ parser.yy.makeUnary = (op, operand) => ({
 
 const parse = input => {
    const { ast, datatypes } = parser.parse(input)
-   console.log('datatypes', datatypes)
+   log('datatypes', datatypes)
    const constructorTypes = {}
    Object.entries(datatypes).forEach(([typeName, constrs]) => {
       constrs.forEach(({ name, paramType }, i) => {
@@ -39,16 +40,16 @@ const parse = input => {
          }
       })
    })
-   console.log('datatypes:', datatypes)
-   console.log('constructors:', constructorTypes)
-   console.log('ast', util.inspect(ast, { showHidden: false, depth: null }))
+   log('datatypes:', datatypes)
+   log('constructors:', constructorTypes)
+   log('ast', util.inspect(ast, { showHidden: false, depth: null }))
    const withoutMatch = transformMatch(constructorTypes)(ast)
-   console.log(
+   log(
       'withoutMatch',
       util.inspect(withoutMatch, { showHidden: false, depth: null })
    )
    const withoutLet = transformLet(withoutMatch)
-   console.log(
+   log(
       'withoutLet',
       util.inspect(withoutLet, { showHidden: false, depth: null })
    )
@@ -80,7 +81,7 @@ const applyDecls = (decls, expr) =>
 
 const transformMatch = constructorTypes => {
    const thisTransform = ast => {
-      console.log('removing match from', ast)
+      log('removing match from', ast)
       if (ast.tokenName == 'MATCH') {
          const matcher = {
             tokenName: 'IDENTIFIER',
@@ -88,7 +89,7 @@ const transformMatch = constructorTypes => {
          }
          let body = { tokenName: 'ERROR' }
          ast.clauses.reverse().forEach(clause => {
-            console.log(
+            log(
                'unified',
                clause.pattern,
                matcher,
@@ -124,7 +125,7 @@ const transformMatch = constructorTypes => {
 }
 
 const unifyPattern = (pattern, matcher, constructorTypes) => {
-   console.log('unifying', pattern, matcher, constructorTypes)
+   log('unifying', pattern, matcher, constructorTypes)
    if (pattern.tokenName == 'IDENTIFIER' && constructorTypes[pattern.id])
       return {
          checks: [

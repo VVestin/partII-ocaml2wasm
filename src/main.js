@@ -1,6 +1,7 @@
 const parse = require('./parser')
 const inferTypes = require('./typer')
 const comp = require('./comp')
+const log = require('./logger')
 
 const prettyType = t => {
    if (!t) return ''
@@ -15,13 +16,13 @@ const prettyType = t => {
 
 const prettyPrint = (prefix, ast) => {
    if (ast.tokenName == 'INT_LITERAL' || ast.tokenName == 'BOOL_LITERAL')
-      console.log(prefix, ast.val, ':', prettyType(ast.type))
+      log(prefix, ast.val, ':', prettyType(ast.type))
    else if (ast.tokenName == 'FLOAT_LITERAL')
-      console.log(prefix, ast.val + 'f', ':', prettyType(ast.type))
+      log(prefix, ast.val + 'f', ':', prettyType(ast.type))
    else if (ast.tokenName == 'IDENTIFIER')
-      console.log(prefix, 'ID', ast.id, ':', prettyType(ast.type))
+      log(prefix, 'ID', ast.id, ':', prettyType(ast.type))
    else if (ast.tokenName == 'UNARY_OP') {
-      console.log(
+      log(
          prefix,
          ast.op + (ast.op == 'NTH' ? `(${ast.n})` : ''),
          ':',
@@ -30,38 +31,38 @@ const prettyPrint = (prefix, ast) => {
       prettyPrint(prefix + '--', ast.operand)
    } else if (ast.tokenName == 'INFIX_OP') {
       prettyPrint(prefix + '--', ast.lhs)
-      console.log(prefix, ast.op, ':', prettyType(ast.type))
+      log(prefix, ast.op, ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.rhs)
    } else if (ast.tokenName == 'LET') {
-      console.log(prefix, 'LET', ':', prettyType(ast.type))
+      log(prefix, 'LET', ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.binding)
-      console.log(prefix, 'IN')
+      log(prefix, 'IN')
       prettyPrint(prefix + '--', ast.expr)
    } else if (ast.tokenName == 'BINDING') {
       prettyPrint(prefix + '--', ast.lhs)
-      console.log(prefix, '=', ':', prettyType(ast.type))
+      log(prefix, '=', ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.rhs)
    } else if (ast.tokenName == 'APP') {
       prettyPrint(prefix + '--', ast.func)
-      console.log(prefix, 'APP', ':', prettyType(ast.type))
+      log(prefix, 'APP', ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.arg)
    } else if (ast.tokenName == 'FUNC') {
-      console.log(prefix, 'FUNC', ':', prettyType(ast.type))
+      log(prefix, 'FUNC', ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.param)
-      console.log(prefix, 'BODY')
+      log(prefix, 'BODY')
       prettyPrint(prefix + '--', ast.body)
    } else if (ast.tokenName == 'TUPLE') {
-      console.log(prefix, 'TUPLE', ':', prettyType(ast.type))
+      log(prefix, 'TUPLE', ':', prettyType(ast.type))
       ast.exprs.forEach(expr => prettyPrint(prefix + '--', expr))
    } else if (ast.tokenName == 'IF') {
-      console.log(prefix, 'IF', ':', prettyType(ast.type))
+      log(prefix, 'IF', ':', prettyType(ast.type))
       prettyPrint(prefix + '--', ast.cond)
-      console.log(prefix, 'THEN')
+      log(prefix, 'THEN')
       prettyPrint(prefix + '--', ast.then)
-      console.log(prefix, 'ELSE')
+      log(prefix, 'ELSE')
       prettyPrint(prefix + '--', ast.else)
    } else if (ast.tokenName == 'ERROR') {
-      console.log(prefix, 'ERROR', ':', prettyType(ast.type))
+      log(prefix, 'ERROR', ':', prettyType(ast.type))
    } else
       throw new Error("Can't pretty print unknown token " + JSON.stringify(ast))
 }
@@ -133,14 +134,14 @@ const extract = (val, t, memory, datatypes) => {
 
 const generateWasm = async input => {
    const ir = parse(input)
-   console.log('DONE PARSING \n\n')
-   console.log('ast', ir.ast)
-   console.log()
+   log('DONE PARSING \n\n')
+   log('ast', ir.ast)
+   log()
    prettyPrint('', ir.ast)
 
    try {
       inferTypes(ir)
-      console.log('type', ir.ast.type)
+      log('type', ir.ast.type)
    } catch (e) {
       console.error(e)
       return
@@ -151,7 +152,7 @@ const generateWasm = async input => {
    //return { ir }
    // Compiling
    const wat = comp(ir)
-   console.log(wat)
+   log(wat)
 
    // Executing
    const wabt = await require('wabt')()
@@ -177,7 +178,7 @@ const generateWasm = async input => {
 const compileAndRun = async input => {
    const { ir, instance } = await generateWasm(input)
    if (!instance) return
-   //console.log('instance', instance)
+   //log('instance', instance)
 
    const wasm = instance.exports
    const memory = new Uint32Array(wasm.heap.buffer)
@@ -185,7 +186,7 @@ const compileAndRun = async input => {
    const t0 = process.hrtime()
    const output = wasm.main()
    const time = process.hrtime(t0)
-   //console.log(memory)
+   //log(memory)
    console.log('main', output, ':', prettyType(ir.ast.type))
    return { value: extract(output, ir.ast.type, memory, ir.datatypes), time }
 }

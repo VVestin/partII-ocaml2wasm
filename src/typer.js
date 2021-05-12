@@ -1,3 +1,4 @@
+const log = require('./logger')
 const INT = { type: 'INT' }
 const FLOAT = { type: 'FLOAT' }
 const BOOL = { type: 'BOOL' }
@@ -51,10 +52,10 @@ const inferTypes = ({ ast, datatypes, constructorTypes }) => {
          })
       }
    )
-   console.log('constraints:')
-   constraints.forEach(c => console.log(c))
+   log('constraints:')
+   constraints.forEach(c => log(c))
    const types = solve(constraints)
-   console.log(types)
+   log(types)
    substitute(ast, types)
 }
 
@@ -98,7 +99,7 @@ const annotate = (ast, tenv) => {
 }
 
 const constrain = (ast, constructorTypes) => {
-   //console.log('constraining', ast.tokenName)
+   //log('constraining', ast.tokenName)
    if (ast.tokenName == 'INT_LITERAL') {
       return [{ a: ast.type, b: 'INT' }]
    } else if (ast.tokenName == 'FLOAT_LITERAL') {
@@ -195,17 +196,17 @@ const constrain = (ast, constructorTypes) => {
 const solve = constraints => {
    let solution = {}
    //constraints = constraints.filter(({ a, b }) => !['COMP', 'ANY'].includes(b))
-   //console.log('constraints without COMP', constraints)
+   //log('constraints without COMP', constraints)
    for (let constraint of constraints) {
-      //console.log('solution', solution)
-      //console.log('applying constraint', constraint)
-      //console.log( 'updated constraint', applySubstitutions(constraint, solution))
+      //log('solution', solution)
+      //log('applying constraint', constraint)
+      //log( 'updated constraint', applySubstitutions(constraint, solution))
       const substitutions = unify(applySubstitutions(constraint, solution))
-      console.log('got substitutions', substitutions)
+      log('got substitutions', substitutions)
       for (let [tvar, t] of Object.entries(substitutions)) {
          //if (['COMP', 'ANY'].includes(t) || t.varLength) delete substitutions[tvar]
       }
-      //console.log('substitutions without COMP', substitutions)
+      //log('substitutions without COMP', substitutions)
       // updating solution
       for (let tvar of Object.keys(solution)) {
          solution[tvar] = applySubstitutions(solution[tvar], substitutions)
@@ -224,7 +225,7 @@ const solve = constraints => {
             : substitutions[tvar]
          solution[tvar] = newType
       }*/
-      console.log('')
+      log('')
    }
    return solution
 }
@@ -239,7 +240,7 @@ const isDatatype = t => {
 
 // takes a single constraint and returns a substitution that unifies the two sides of the contstraint
 const unify = ({ a, b }) => {
-   console.log('unifying', a, b)
+   log('unifying', a, b)
    if (a == 'ANY' || b == 'ANY') {
       return {}
    } else if (['INT', 'FLOAT', 'BOOL'].includes(a) && (a == b || b == 'COMP')) {
