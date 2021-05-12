@@ -9,6 +9,7 @@
 \usepackage{mwe}
 \usepackage{float}
 \usepackage{enumerate}
+\usepackage{multicol}
 
 \graphicspath{ {images/} }
 
@@ -19,6 +20,7 @@
 \setlength{\parindent}{0em}
 \setlength{\parskip}{1em}
 
+\newcommand{\JSofOCaml}{{\tt JS\_of\_OCaml} }
 \renewcommand{\baselinestretch}{1.1}    % adjust line spacing to make
                                         % more readable
 
@@ -293,7 +295,7 @@ Another benefit of having tests before you start coding is that you know you've 
 There's also the obvious benefit that you end up with lots of tests that are not just an afterthought, but can play an active part in the development process.
 
 For these reasons, I started my project by writing the sample OCaml programs described above, adding tests for the expected output, and setting up automated end-to-end testing using the JavaScript test framework Mocha.
-Having these sample programs was also invaluable for evaluating the compiler against JavaScript versions of the same programs and against the JS\_of\_OCaml compiled versions.
+Having these sample programs was also invaluable for evaluating the compiler against JavaScript versions of the same programs and against the \JSofOCaml compiled versions.
 I started the project by writing smaller unit tests for the parser and code generator, but did not keep up with this formal testing through development.
 
 \subsection{Kanban Organizational Technique}
@@ -556,15 +558,72 @@ This addition to the environment is also reflected in the {\tt ctx} and {\tt dep
 Whenever a closure of a recursive function is created, we just allocate an extra node on its environment list with the function's index in the funcref table.
 This addition of an extra variable lets us have single-recursive functions (our subset of OCaml does not include mutual-recursion, although it would be possibly by adding multiple entries to the environment).
 
-\section{A Worked Example}
-
 \chapter{Evaluation}
 
-TODO
+Does the compiler really work?
+How do programs compiled by my compiler compare to alternatives for writing the same program?
+In this chapter, we aim to answer these questions by first detailing the methods used to evaluate the compiler.
+Then, we will analyse the data produced by our experiments.
+Finally, we will synthesize these results to answer the question: did this project meet it's success criteria?
+
+\section{Evaluation Methods}
+At a high level, we will evaluate the compiler by writing OCaml programs, compiling them, and testing the  correctness and performance of the resulting WebAssembly.
+\subsection{Extended Sample Programs}
+The sample programs described in the project proposal and preparation chapter were used as end-to-end tests of the compiler.
+In order to test the compiler more thoroughly and better isolate behaviors, an additional 7 sample programs were developed.
+\begin{multicols}{3}
+\begin{itemize}
+\itemsep-.2em
+\item Int Arithmetic
+\item Float Arithmetic
+\item Boolean Arithmetic
+\item 8-th Power
+\item Factorial
+\item Recursive Fibonacci
+\item Iterative Fibonacci
+\item Integer Square Root
+\item Euclid's Algorithm
+\item FizzBuzz
+\item Quicksort
+\item N-Queens
+\end{itemize}
+\end{multicols}
+
+\subsection{9 Performance Programs}
+In addition to end-to-end testing the compiler for correctness, we will evaluate the compiler by comparing it to two alternatives methods of executing an OCaml program on the web.
+The two alternatives are to compile the OCaml to JavaScript using the \JSofOCaml tool or to handwrite a JavaScript version matching the OCaml.
+\JSofOCaml works by taking bytecode produced by a full OCaml compiler and translating that bytecode into JavaScript.
+Because the code is first compiled by the OCaml compiler, we can expect optimizations like tail-call optimizations to be applied.
+Even with optimizations, I would expect idiomatic, handwritten JavaScript to outperform this generated JS.
+Both compilers will benefit from JavaScript optimizations done by the V8 engine as it JIT compiles our code.
+
+We will use 3 programs to compare the different methods: recursive Fibonacci, iterative Fibonacci, and Quicksort.
+By recursive Fibonacci, I mean the top down translation of the formula $fib(n) = fib(n-1) + fib(n - 2)$ as opposed to the iterative implementation which computes Fibonacci numbers up to the target.
+The recursive implementation is meant to be inefficient and doesn't include any memoization to improve the complexity.
+Also, by when I say iterative Fibonacci, the solution is still uses recursion (imperative loops have not been implemented), I just mean that it's tail recursive and computes Fibonacci numbers bottom up.
+The quicksort implementation is also no frills quicksort using the first element as the pivot and without augmentations like in-place quicksort.
+The JavaScript version is made to resemble as closely as possible the OCaml version, except that it uses builtin JS arrays (but it does not modify them).
+
+These programs were chosen to each have a different time complexity with recursive Fibonacci being $O(2^n)$, iterative Fibonacci being $O(n)$, and Quicksort being $O(n\log{}n)$.
+There will be 9 programs in total, solving the 3 problems using each of the compilers.
+
+\subsection{Timing the Programs}
+In order to gather our data, we need to time programs in each of the 3 different styles.
+This proved harder than initially thought because it's important that only the runtime of the functions are included and not setup and teardown that happens around that execution.
+For both the Wasm execution and the handwritten JavaScript version, we were able to use JavaScript's performance timer which gives timings in nanoseconds.
+However, for the \JSofOCaml version, we can only access the OCaml timing functions, which only give us millisecond precision.
+Normally, it wouldn't be a problem because we could use milliseconds for both, however the timing programs all execute in about 1-5 milliseconds.
+The source of the problem is that my WebAssembly compiler doesn't do any garbage collection, and additionally every function call allocates a new node on the environment list for a functions parameter.
+So, without any optimizations such as tail-call optimizations, programs processing large inputs end up filling up memory quite quickly.
+For this reason, we can't just run the tests on larger inputs to get longer times, and must deal with the low-precision millisecond timings for the \JSofOCaml tests.
+
+\section{Results}
+
+\section{Success Criteria}
 
 \chapter{Conclusion}
 
-TODO
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the bibliography

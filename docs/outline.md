@@ -71,6 +71,8 @@
     - docs
     - dist
     - app.js
+- What has been implemented
+- What has NOT been implemented
 ### Parsing
 - [x] The general grammar
    - [x] ambiguous expr v1
@@ -106,6 +108,30 @@
 - Give the results
 - Compare with the success criteria
 - Interpret what the results teach us
+
+### Evaluation methods
+- [x] Extended Sample programs
+- [x] 3 programs to evaluate timing
+    - [x] fib iterative
+    - [x] fib recursive
+    - [x] quicksort
+        - [x] no frills, not fancy or in-place
+        - [x] JS version will not be as fast as collections sort
+- [x] Problems timing OCaml programs
+   - [x] Memory concerns
+### Timing results
+- [ ] fibonacci iterative
+   - [ ] floating point jump (JS bad (jk I love JS))
+   - [ ] trend line
+- [ ] fibonacci recursive
+    - [ ] limitations in range
+    - [ ] exponential shape
+- [ ] quicksort
+    - [ ] about a linearathmetic shape
+    - [ ] wasm_of_ocaml clearly beats js_of_ocaml and gets similar performance to JIT optimized JS
+### Success Criteria
+- [ ] mocha test results
+- [ ] timing results match expected
 
 ## Conclusion
 (notes):
