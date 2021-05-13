@@ -1,4 +1,5 @@
 const parse = require('./parser')
+const transform = require('./transform')
 const inferTypes = require('./typer')
 const comp = require('./comp')
 const log = require('./logger')
@@ -134,6 +135,7 @@ const extract = (val, t, memory, datatypes) => {
 
 const generateWasm = async input => {
    const ir = parse(input)
+   ir.ast = transform(ir.ast, ir.constructorTypes)
    log('DONE PARSING \n\n')
    log('ast', ir.ast)
    log()
