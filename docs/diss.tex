@@ -10,6 +10,10 @@
 \usepackage{float}
 \usepackage{enumerate}
 \usepackage{multicol}
+\usepackage{epigraph}
+
+\setlength\epigraphwidth{12cm}
+%\setlength\epigraphrule{0pt}
 
 \graphicspath{ {images/} }
 
@@ -55,8 +59,7 @@ Homerton College \\[5mm]
 
 {\large
 \begin{tabular}{ll}
-Name:               & \bf Weston Metzler                       \\
-College:            & \bf Homerton College                      \\
+Candidate Number:   & \bf TODO                       \\
 Project Title:      & \bf Compiling OCaml to WebAssembly         \\
 Examination:        & \bf Computer Science Tripos -- Part II, July 2021  \\
 Word Count:         & \bf TODO \\
@@ -72,10 +75,6 @@ Supervisor:         & Dr John Fawcett                    \\
 TODO
 
 \section*{Work Completed}
-
-TODO
-
-\section*{Special Difficulties}
 
 TODO
 
@@ -104,8 +103,83 @@ extent for a comparable purpose.
 \pagestyle{headings}
 
 \chapter{Introduction}
+In this chapter, we'll be addressing why we would want to compile OCaml into WebAssembly.
+We'll explore the reasons someone might want an alternative to JavaScript for web development, as well as why OCaml is a good choice in areas where JavaScript falls short.
+Then we'll talk about WebAssembly, the reasons it was introduced, and why it's a good target for our compiler.
+Finally we'll explain what has been built to address the problems that have been laid out.
 
-TODO
+\section{JavaScript}
+
+\epigraph{“One of the notorious ones was, ‘I’d like to compare a number to a string that contains that numeral. And I don’t want to have to change my code to convert the string to a number, or the number to a string. I just want it to work. Can you please make the equals operator just say, Oh this looks like a two, and this looks like a string number two. They’re equal enough.’ And I did it. And that’s a big regret"[cite]}{Brandon Eich (Creator of JavaScript)}
+
+For many years, JavaScript has been the only language programmers could use writing software to run in web pages.
+JavaScript is quite a unique language, designed in just 10 days drawing inspiration from the functional language Scheme and the OOP language Java (and it's C origins).
+The original intentions were to make a basic language that would be ``a silly little brother"[cite] to Java, and it was designed much more loosely than it's ``older brother" Java, which was carefully engineered by a team of researchers at Sun Microsystems [cite].
+
+The dynamism of JavaScript can be both a great strength and a great weakness, and has been part of the reason JavaScript is one of the most popular languages today and has expanded into back-ends with Node.js and even mobile and desktop apps with frameworks like React Native and Electron.
+At the same time, both newcomers to JavaScript and experienced developers can be puzzled over JavaScript gems like how \mbox{\tt ('b' + 'a' + + 'a').toLowerCase()} is {\tt 'banana'}.
+JavaScript's equality operator can be especially confusing, with examples like {\tt 0 == "0"} and {\tt 0 == []}, but {\tt "0" != []}.
+The reason for this is that JavaScript's equality operator will always coerce arguments to be matching types, as referenced in the Brandon Eich quote above.
+And for creating dynamic web content, this type of flexible equality is suitable.
+It would be quite inconvenient if a small type error in some JavaScript caused the whole webpage to crash and pop up a cryptic error message like what can happen in a Java swing application.
+The nature of the Web also makes it difficult to have a complicated verification and type checking stage at compile time since webpages can dynamically receive and interpret scripts throughout a webpages lifecycle.
+
+JavaScript also takes a performance hit because of it's dynamic type system.
+JavaScript has come a long way from slow interpreters to the V8 engine JIT compiling and optimising JavaScript.
+V8's TurboFan works by speculatively compiling hot sections of code into optimized native code, which can make JavaScript extremely fast [cite].
+This optimization is based on assumptions about the types involved, which must constantly be checked, and if the assumptions are violated, V8 must discard the optimized code.
+This overhead is costly and fundamentally can't be avoided because JavaScript's of dynamic typing.
+
+Another quirk of JavaScript is that despite some object oriented features (even inheritance and classes in ES6), there is only 1 Object type, and so Objects follow duck typing rules.
+Duck typing is as fun as it sounds, following the phrase ``If it walks like a duck and it quacks like a duck, then it's a duck!".
+While typing this way gives programmers a lot more freedom and flexibility, it's a far cry from the strictness of the strong type hierarchy imposed by object oriented languages like Java.
+
+I can't talk about typing in JavaScript without mentioning TypeScript, which is a superset of JavaScript that allows programmers to add type annotations.
+Once you've written a TypeScript program, it goes through a type-checker to enforce the type rules are followed before the code is transpiled into pure JavaScript.
+In the transpiling process, the code should remain mostly the same, just with type annotations removed and possibly some polyfills added.
+TypeScript does address some of the same problems my compiler aims to solve, but ultimately there are more benefits to using OCaml than just type checking, and it's still JavaScript being executed at runtime.
+TODO move? this paragraph so that I can reference OCaml?
+
+In conclusion, JavaScript is not a bad language.
+It was designed with a specific purpose in mind, and it is quite effective and convenient for making webpages dynamic.
+There's a lot to like about it's JavaScript's event driven design, its functional programming features, and its clean syntax which has been developed and polished over years.
+However, JavaScript is not suited to solving every problem, particularly large projects requiring a high level of software engineering that benefit from a rigid type system.
+
+\section{OCaml}
+\epigraph{Developed for more than 20 years at Inria by a group of leading researchers, it has an advanced type system that helps catch your mistakes without getting in your way. It's used in environments where a single mistake can cost millions and speed matters}{- \url{ocaml.org} on OCaml}
+
+OCaml is, in some ways, the opposite of JavaScript.
+OCaml is a general purpose functional programming language which aims to be as expressive as possible while meeting the safety ans speed goals exemplified by the above quote.
+Being a branch of the ML language family, OCaml has all the features of standard ML taught in the 1A course, along with object oriented features and a better ecosystem for sharing modules.
+
+The most important feature of OCaml for our purposes is its strong typing and type inference system.
+OCaml has a very complete type system with solid rules for basic types and powerful parametric polymorphism.
+There aren't any big holes in the type system, as the language came out of academia and is provably sound.
+The fun surprises from JavaScript such as our {\tt 'banana'} example just don't exist for OCaml because they wouldn't be allowed by the type system.
+A good type system is one that doesn't impede the writing of the code, but catches all type errors at compile time.
+More than just not hindering programming, OCaml's type system aids programmers in documenting and reasoning about their programs without requiring many type annotations because of robust type inference.
+
+OCaml's design decisions make it a ideal for large enterprise grade or safety critical software, both areas where JavaScript would not be a good choice.
+OCaml's expressive OOP and module systems with will documented interfaces between components as well as the safety and speed made possible by the type system fit with the needs of a well-engineered project.
+
+\section{WebAssembly}
+
+WebAssembly (Wasm) was created to expand what's possible on the web by allowing browsers to run a near-native instruction set.
+This goal includes creating a compilation target to run high level languages on the Web, and languages like C++ and Rust can already target Wasm.
+WebAssembly is similar to the effort to add the JVM to browsers in the form of Java Applets, except with a new machine language.
+It doesn't quite aim to replace JavaScript, but allows certain parts of a program to be written in a different language and take advantage of lower-level instructions and features.
+Many proposals for WebAssembly include access to GPU hardware and SIMD instructions, allowing many more types of applications to be accessed from your browser.
+Important in the design of WebAssembly is safety, since browsers can download code from anywhere, Wasm includes a verification step for type-checking and carefully sandboxes the executing code.
+WebAssembly was designed for web browsers, but there are many other applications where having portable sandboxed code would be useful.
+As we know from the previous chapter, OCaml has an emphasis on performance and safety, making WebAssembly a fitting target language.
+
+\subsection{My Project}
+
+As we've outlined above, having the option to write OCaml on the web would aid engineers in developing high quality applications to solve certain types of problems that JavaScript isn't designed for.
+OCaml would eliminate some common classes of JavaScript bugs (and sources of confusion) and introduce a whole new paradigm for programming on the web.
+WebAssembly is an exciting new technology that would make for a perfect target for an OCaml compiler, and without the need for dynamic type checks has the potential to drastically outperform even optimizing JavaScript.
+My project is to create a compiler from a subset of OCaml to WebAssembly as a proof of concept and a starting place for writing OCaml on the web.
+My compiler is written in JavaScript (because of its WebAssembly support) and takes as input OCaml source code and outputs WebAssembly code that can be executed in a web browser, or any WebAssembly embedding.
 
 \chapter{Preparation}
 

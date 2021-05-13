@@ -8,12 +8,12 @@
    - Explain how it solves the problem
    - Leave details for the implementation
 
-- JavaScript is weird (dynamic types, unusual prototype-based inheritance, event loop paradigm)
-- The web is an important platform for enterprise projects and would benefit from paradigms and techniques besides JS
-- OCaml is well suited to software engineering, strong and provably sound type system
-- WebAssembly has exciting performance and safety properties that JS lacks, can totally be a target for an OCaml compiler
-- Running OCaml on the Web would enable cool things including better performance
-- Description of what I've built and how it aims to solve the problem
+- [x] JavaScript is weird (dynamic types, unusual prototype-based inheritance, event loop paradigm)
+- [x] The web is an important platform for enterprise projects and would benefit from paradigms and techniques besides JS
+- [x] OCaml is well suited to software engineering, strong and provably sound type system
+- [x] WebAssembly has exciting performance and safety properties that JS lacks, can totally be a target for an OCaml compiler
+- [x] Running OCaml on the Web would enable cool things including better performance
+- [x] Description of what I've built and how it aims to solve the problem
 
 ## Preparation
 (notes):
@@ -62,17 +62,17 @@
     - Explain the limitations (gosh, there's a lot)
 
 ### Repository Overview
-- Pipeline Overview
-- The file structure
-    - 5 important js files
-    - tests
-    - tests/samples/
-    - package.json
-    - docs
-    - dist
-    - app.js
-- What has been implemented
-- What has NOT been implemented
+- [ ] Pipeline Overview
+- [ ] The file structure
+    - [ ] 5 important js files
+    - [ ] tests
+    - [ ] tests/samples/
+    - [ ] package.json
+    - [ ] docs
+    - [ ] dist
+    - [ ] app.js
+- [ ] What has been implemented
+- [ ] What has NOT been implemented
 ### Parsing
 - [x] The general grammar
    - [x] ambiguous expr v1
