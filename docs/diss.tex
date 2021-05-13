@@ -1,6 +1,6 @@
 % Template for a Computer Science Tripos Part II project dissertation
 \documentclass[12pt,a4paper,twoside,openright]{report}
-\usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
+\PassOptionsToPackage{hyphens}{url}\usepackage[pdfborder={0 0 0}]{hyperref}    % turns references into hyperlinks
 \usepackage[margin=25mm]{geometry}  % adjusts page layout
 \usepackage{verbatim}
 \usepackage{docmute}   % only needed to allow inclusion of proposal.tex
@@ -8,10 +8,10 @@
 \usepackage{graphicx}  % allows inclusion of PDF, PNG and JPG images
 \usepackage{mwe}
 \usepackage{float}
-\usepackage{enumerate}
 \usepackage{multicol}
 \usepackage{epigraph}
 \usepackage{dirtree}
+\usepackage{enumitem}
 
 \setlength\epigraphwidth{12cm}
 %\setlength\epigraphrule{0pt}
@@ -56,29 +56,6 @@ Homerton College \\[5mm]
 
 \pagestyle{plain}
 
-\chapter*{Proforma}
-
-{\large
-\begin{tabular}{ll}
-Candidate Number:   & \bf TODO                       \\
-Project Title:      & \bf Compiling OCaml to WebAssembly         \\
-Examination:        & \bf Computer Science Tripos -- Part II, July 2021  \\
-Word Count:         & \bf TODO \\
-Code Line Count:    & \bf 2104 \\
-Project Originator: & Dr Timothy Jones                    \\
-Supervisor:         & Dr John Fawcett                    \\
-\end{tabular}
-}
-\stepcounter{footnote}
-
-\section*{Original Aims of the Project}
-
-TODO
-
-\section*{Work Completed}
-
-TODO
-
 \newpage
 \section*{Declaration}
 
@@ -89,10 +66,43 @@ dissertation does not contain material that has already been used to any substan
 extent for a comparable purpose.
 
 \bigskip
-\leftline{Signed [signature]}
+\leftline{Signed Weston Metzler}
 
 \medskip
-\leftline{Date [date]}
+\leftline{Date 13/5/2021}
+
+\chapter*{Proforma}
+
+\vspace{-1.5em}
+{\large
+\begin{tabular}{ll}
+Candidate Number:   & \bf 2406F                       \\
+Project Title:      & \bf Compiling OCaml to WebAssembly         \\
+Examination:        & \bf Computer Science Tripos -- Part II, May 2021  \\
+Word Count:         & \bf 10,569 \\
+Code Line Count:    & \bf 2,104 \\
+Project Originator: & Dr Timothy Jones                    \\
+Supervisor:         & Dr John Fawcett                    \\
+\end{tabular}
+}
+\stepcounter{footnote}
+
+\section*{Original Aims of the Project}
+The aim of my project is to create a compiler from a subset of OCaml to WebAssembly.
+The subset of OCaml included primitive types, functions, tuples, and datatypes as well as the important operators on those types.
+The implementation should be a full compiler including parsing, intermediate transformations, type inference, and code generation.
+The possible extension would be to expand the subset of OCaml to include features from multicore OCaml, mainly algebraic effect handlers.
+\vspace{-1.5em}
+
+\section*{Work Completed}
+The core aims of the project were completed.
+I implemented the compiler using a parser generator for the front end, my own implementation of constraint-based type inference, and a code generator including a runtime environment.
+To verify the correctness of the compiler, I compiled and tested a set of sample programs.
+I also benchmarked a 3 programs output by my compiler against \JSofOCaml compiled programs and handwritten JavaScript as part of the evaluation.
+\vspace{-1.5em}
+
+\section*{Special Difficulties}
+None
 
 \tableofcontents
 
@@ -111,23 +121,23 @@ Finally we'll explain what has been built to address the problems that have been
 
 \section{JavaScript}
 
-\epigraph{“One of the notorious ones was, ‘I’d like to compare a number to a string that contains that numeral. And I don’t want to have to change my code to convert the string to a number, or the number to a string. I just want it to work. Can you please make the equals operator just say, Oh this looks like a two, and this looks like a string number two. They’re equal enough.’ And I did it. And that’s a big regret"[cite]}{Brandon Eich (Creator of JavaScript)}
+\epigraph{“One of the notorious ones was, ‘I’d like to compare a number to a string that contains that numeral. And I don’t want to have to change my code to convert the string to a number, or the number to a string. I just want it to work. Can you please make the equals operator just say, Oh this looks like a two, and this looks like a string number two. They’re equal enough.’ And I did it. And that’s a big regret" \cite{jsorigins}}{Brendan Eich (Creator of JavaScript)}
 
 For many years, JavaScript has been the only language programmers could use writing software to run in web pages.
 JavaScript is quite a unique language, designed in just 10 days drawing inspiration from the functional language Scheme and the OOP language Java (and it's C origins).
-The original intentions were to make a basic language that would be ``a silly little brother"[cite] to Java, and it was designed much more loosely than it's ``older brother" Java, which was carefully engineered by a team of researchers at Sun Microsystems [cite].
+The original intentions were to make a basic language that would be ``a silly little brother"\cite{jsorigins} to Java, and it was designed much more loosely than it's ``older brother" Java, which was carefully engineered by a team of researchers at Sun Microsystems.
 
 The dynamism of JavaScript can be both a great strength and a great weakness, and has been part of the reason JavaScript is one of the most popular languages today and has expanded into back-ends with Node.js and even mobile and desktop apps with frameworks like React Native and Electron.
 At the same time, both newcomers to JavaScript and experienced developers can be puzzled over JavaScript gems like how \mbox{\tt ('b' + 'a' + + 'a').toLowerCase()} is {\tt 'banana'}.
 JavaScript's equality operator can be especially confusing, with examples like {\tt 0 == "0"} and {\tt 0 == []}, but {\tt "0" != []}.
-The reason for this is that JavaScript's equality operator will always coerce arguments to be matching types, as referenced in the Brandon Eich quote above.
+The reason for this is that JavaScript's equality operator will always coerce arguments to be matching types, as referenced in the Brendan Eich quote above.
 And for creating dynamic web content, this type of flexible equality is suitable.
 It would be quite inconvenient if a small type error in some JavaScript caused the whole webpage to crash and pop up a cryptic error message like what can happen in a Java swing application.
 The nature of the Web also makes it difficult to have a complicated verification and type checking stage at compile time since webpages can dynamically receive and interpret scripts throughout a webpages lifecycle.
 
 JavaScript also takes a performance hit because of it's dynamic type system.
 JavaScript has come a long way from slow interpreters to the V8 engine JIT compiling and optimising JavaScript.
-V8's TurboFan works by speculatively compiling hot sections of code into optimized native code, which can make JavaScript extremely fast [cite].
+V8's TurboFan works by speculatively compiling hot sections of code into optimized native code, which can make JavaScript extremely fast \cite{v8-jit}.
 This optimization is based on assumptions about the types involved, which must constantly be checked, and if the assumptions are violated, V8 must discard the optimized code.
 This overhead is costly and fundamentally can't be avoided because JavaScript's of dynamic typing.
 
@@ -146,7 +156,7 @@ There's a lot to like about it's JavaScript's event driven design, its functiona
 However, JavaScript is not suited to solving every problem, particularly large projects requiring a high level of software engineering that benefit from a rigid type system.
 
 \section{OCaml}
-\epigraph{Developed for more than 20 years at Inria by a group of leading researchers, it has an advanced type system that helps catch your mistakes without getting in your way. It's used in environments where a single mistake can cost millions and speed matters}{- \url{ocaml.org} on OCaml}
+\epigraph{Developed for more than 20 years at Inria by a group of leading researchers, it has an advanced type system that helps catch your mistakes without getting in your way. It's used in environments where a single mistake can cost millions and speed matters \cite{ocamlorg}}{- OCaml Website}
 
 OCaml is, in some ways, the opposite of JavaScript.
 OCaml is a general purpose functional programming language which aims to be as expressive as possible while meeting the safety ans speed goals exemplified by the above quote.
@@ -164,7 +174,7 @@ OCaml's expressive OOP and module systems with will documented interfaces betwee
 
 \section{WebAssembly}
 
-WebAssembly (Wasm) was created to expand what's possible on the web by allowing browsers to run a near-native instruction set.
+WebAssembly (Wasm) was created to expand what's possible on the web by allowing browsers to run a near-native instruction set \cite{wasmorg}.
 This goal includes creating a compilation target to run high level languages on the Web, and languages like C++ and Rust can already target Wasm.
 WebAssembly is similar to the effort to add the JVM to browsers in the form of Java Applets, except with a new machine language.
 It doesn't quite aim to replace JavaScript, but allows certain parts of a program to be written in a different language and take advantage of lower-level instructions and features.
@@ -193,7 +203,7 @@ Finally, we will look at the software engineering practices used to minimize ris
 
 In the introduction, we talked about the role of WebAssembly as an alternative execution environment for web browsers to JavaScript.
 Now, we're going to dive a bit deeper into how WebAssembly works for reference in later chapters.
-At a high level, WebAssembly is a general purpose specification and binary instruction format.
+At a high level, WebAssembly is a general purpose specification and binary instruction format \cite{mozillawasm}.
 The instruction set is quite low level, resembling assembly languages to take advantage of hardware and run at near native speeds.
 That said, it's not specific to any architecture, and is designed to run on a stack-based virtual machine, giving it portability along with speed and efficiency.
 Currently the main target environment is web browsers as the name WebAssembly suggests, but WebAssembly can easily be run on a range of platforms.
@@ -233,7 +243,7 @@ In my original proposal, I intended to implement the compiler in OCaml for somew
 I chose OCaml as the implementation language because it matched the source language, I thought its strong yet flexible type system made it a good choice for implementing a compiler, and I wanted to gain experience with the language.
 While doing the preparation, the advantages of using JavaScript became clear and I decided to write the compiler in JS.
 
-A big reason to use JavaScript was support for JS by the WebAssembly Binary Toolkit (wabt).
+A big reason to use JavaScript was support for JS by the WebAssembly Binary Toolkit (wabt) \cite{wabt}.
 This is the tool by which programs written in the human-readable WebAssembly Text Format ({\tt .wat} files) are validated and converted into runnable programs in the WebAssembly Binary Format ({\tt .wasm} files).
 This tool can be used both in browsers and in the Node JS environment, and can be integrated into a JavaScript implementation of the compiler.
 An OCaml version outputting {\tt .wat} would require an extra "assembly" step in order to create runnable code.
@@ -257,7 +267,7 @@ Not all grammars are LALR(1) though, which will lead to shift-reduce and reduce-
 A convenient feature of parser generators is that they allow you to say how these conflicts are resolved without having to re-write the grammar.
 Instead you can add precedence and associativity labels to grammar rules that can resolve grammar ambiguities without adding extra grammar rules.
 
-In order to prepare for this project, I learned to use the tool Jison, which is a JavaScript version of the popular Bison parser generator.
+In order to prepare for this project, I learned to use the tool Jison \cite{jison}, which is a JavaScript version of the popular Bison parser generator.
 This was a substitution for {\tt ocamllex} and {\tt ocamlyacc} which I had planned to use in an OCaml implementation.
 The OCaml language has a well specified grammar (see \url{https://ocaml.org/releases/4.11/htmlman/language.html}) so my task was to translate this grammar in an BNF-like form to Jison.
 The main task being reducing this grammar to describe our subset of OCaml and resolving the ambiguity in the provided BNF.
@@ -367,8 +377,8 @@ Writing tests is also in a sense part of the design process, forcing the program
 Another benefit of having tests before you start coding is that you know you've finished once the tests all pass, and any extra work or refactoring is optional.
 There's also the obvious benefit that you end up with lots of tests that are not just an afterthought, but can play an active part in the development process.
 
-For these reasons, I started my project by writing the sample OCaml programs described above, adding tests for the expected output, and setting up automated end-to-end testing using the JavaScript test framework Mocha.
-Having these sample programs was also invaluable for evaluating the compiler against JavaScript versions of the same programs and against the \JSofOCaml compiled versions.
+For these reasons, I started my project by writing the sample OCaml programs described above, adding tests for the expected output, and setting up automated end-to-end testing using the JavaScript test framework Mocha \cite{mochaorg}.
+Having these sample programs was also invaluable for evaluating the compiler against JavaScript versions of the same programs and against the \JSofOCaml \cite{jsofocaml} compiled versions.
 I started the project by writing smaller unit tests for the parser and code generator, but did not keep up with this formal testing through development.
 
 \subsection{Kanban Organizational Technique}
@@ -493,7 +503,7 @@ expr:
    'let' let-binding 'in' expr
       {$$ = {tokenName: 'LET', rec: false, binding: $2, body: $4}} \end{verbatim}
 \subsection{Resolving Ambiguity}
-A direct translation of the grammar in the OCaml specification results in a grammar that's context free, but not in $LR$. We get lots of constructions like the following:
+A direct translation of the grammar in the OCaml specification \cite{ocamlspec} results in a grammar that's context free, but not in $LR$. We get lots of constructions like the following:
 \begin{verbatim} expr:
    expr '+' expr
  | expr '*' expr
@@ -590,7 +600,7 @@ Below is algorithm for generating a solution from a set of constraints:
 \begin{enumerate}
    \item Initialize the solution to an empty map.
    \item Repeat for each constraint.
-      \begin{enumerate}[i.]
+      \begin{enumerate}[label=\roman*]
          \item Apply the substitutions in the current solution to update our constraint.
          \item Unify the two sides of the constraint to generate a set of new substitutions.
          \item Apply the new substitutions to our current solution.
@@ -715,7 +725,7 @@ In order to test the compiler more thoroughly and better isolate behaviors, an a
 \subsection{9 Performance Programs}
 In addition to end-to-end testing the compiler for correctness, we will evaluate the compiler by comparing it to two alternatives methods of executing an OCaml program on the web.
 The two alternatives are to compile the OCaml to JavaScript using the \JSofOCaml tool or to handwrite a JavaScript version matching the OCaml.
-\JSofOCaml works by taking bytecode produced by a full OCaml compiler and translating that bytecode into JavaScript.
+\JSofOCaml works by taking bytecode produced by a full OCaml compiler and translating that bytecode into JavaScript \cite{jsofocaml}.
 Because the code is first compiled by the OCaml compiler, we can expect optimizations like tail-call optimizations to be applied.
 Even with optimizations, I would expect idiomatic, handwritten JavaScript to outperform this generated JS.
 Both compilers will benefit from JavaScript optimizations done by the V8 engine as it JIT compiles our code.
@@ -836,7 +846,7 @@ In order to achieve that goal, we implemented a full compiler from a subset of O
 In the narrow terms of our success criteria, this project was a success and we built a working compiler for our subset of OCaml, with the added bonus that it outperforms bot handwritten JavaScript and OCaml compiled to JavaScript for at least a few test programs.
 However, in the huge space of web development, this is just a drop in the bucket.
 Improving the free and open platform of the web takes constant effort by a global community of programmers.
-Every project like this one, successful or not moves the web from where it was decades ago when Brandon Eich created JavaScript in 10 days to where it is now and beyond.
+Every project like this one, successful or not moves the web from where it was decades ago when Brendan Eich created JavaScript in 10 days to where it is now and beyond.
 I think it is certain that we will see more and more languages with full WebAssembly compilers helping developers write robust and efficient software that wouldn't have been feasible to create in JavaScript.
 
 I learned a lot from completing this project.
@@ -863,6 +873,6 @@ Still, this project succeeded as a proof of concept and a starting point for a f
 
 \chapter{Project Proposal}
 
-% \input{proposal}
+\input{proposal}
 
 \end{document}

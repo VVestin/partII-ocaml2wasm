@@ -62,15 +62,13 @@
     - Explain the limitations (gosh, there's a lot)
 
 ### Repository Overview
-- [ ] Pipeline Overview
-- [ ] The file structure
-    - [ ] 5 important js files
-    - [ ] tests
-    - [ ] tests/samples/
-    - [ ] package.json
-    - [ ] docs
-    - [ ] dist
-    - [ ] app.js
+- [x] Pipeline Overview
+- [x] The file structure
+    - [x] 5 important js files
+    - [x] tests
+    - [x] tests/samples/
+    - [x] package.json
+    - [x] docs
 - [ ] What has been implemented
 - [ ] What has NOT been implemented
 ### Parsing
@@ -139,6 +137,5 @@
 - What would you do differently if done again
 - What advice would I have for others doing this project
 
-- Discuss the success criteria
-- What did I learn from this project
-- What would I do differently if doing project again
+- [x] Discuss the success criteria
+- [x] What did I learn from this project
