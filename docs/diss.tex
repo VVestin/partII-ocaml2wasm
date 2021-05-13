@@ -11,6 +11,7 @@
 \usepackage{enumerate}
 \usepackage{multicol}
 \usepackage{epigraph}
+\usepackage{dirtree}
 
 \setlength\epigraphwidth{12cm}
 %\setlength\epigraphrule{0pt}
@@ -63,7 +64,7 @@ Candidate Number:   & \bf TODO                       \\
 Project Title:      & \bf Compiling OCaml to WebAssembly         \\
 Examination:        & \bf Computer Science Tripos -- Part II, July 2021  \\
 Word Count:         & \bf TODO \\
-Code Line Count:    & \bf TODO \\
+Code Line Count:    & \bf 2104 \\
 Project Originator: & Dr Timothy Jones                    \\
 Supervisor:         & Dr John Fawcett                    \\
 \end{tabular}
@@ -138,7 +139,6 @@ I can't talk about typing in JavaScript without mentioning TypeScript, which is 
 Once you've written a TypeScript program, it goes through a type-checker to enforce the type rules are followed before the code is transpiled into pure JavaScript.
 In the transpiling process, the code should remain mostly the same, just with type annotations removed and possibly some polyfills added.
 TypeScript does address some of the same problems my compiler aims to solve, but ultimately there are more benefits to using OCaml than just type checking, and it's still JavaScript being executed at runtime.
-TODO move? this paragraph so that I can reference OCaml?
 
 In conclusion, JavaScript is not a bad language.
 It was designed with a specific purpose in mind, and it is quite effective and convenient for making webpages dynamic.
@@ -311,8 +311,7 @@ This problem was selected because it can be solved using the common generate-and
 
 \subsection{Benchmarking}
 Another requirement of this project is benchmarking the compiler in order to evaluate what has been created, and whether it successfully allows programmers to write OCaml for the web as an alternative to JavaScript.
-
-TODO: finish this once I've done the evaluation
+This should include both end-to-end tests of the compiler on the sample programs listed above, as well as more detailed performance tests of a few programs.
 
 \section{Software Engineering}
 In this section, we'll talk about the engineering tools and practices used to execute this project.
@@ -411,6 +410,27 @@ The collaborative benefits of Git and Github weren't realized by this work on th
 \section{Repository Overview}
 \subsection{Pipeline Overview}
 \subsection{Filestructure}
+\dirtree{%
+.1 Wasm\_of\_OCaml........................2104 LOC.
+.2 docs................................0 LOC.
+.2 learn.............................363 LOC.
+.2 src..............................1377 LOC.
+.3 ocaml.jison....................260 LOC.
+.3 parser.js.......................49 LOC.
+.3 transform.js...................248 LOC.
+.3 typer.js.......................315 LOC.
+.3 comp.js........................325 LOC.
+.3 main.js........................179 LOC.
+.2 test..............................364 LOC.
+.3 samples.test.js.................56 LOC.
+.3 run-experiments.js..............68 LOC.
+.3 samples........................142 LOC.
+.4 8-queens.ml..................19 LOC.
+.4 ...11 other sample.
+.3 ocaml...........................49 LOC.
+.3 js..............................30 LOC.
+.3 js\_of\_ocaml......................0 LOC.
+}
 
 \section{Parsing}
 For parsing, I've used the powerful Jison port of the parser generator Bison.
