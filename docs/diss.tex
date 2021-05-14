@@ -89,9 +89,9 @@ Supervisor:         & Dr John Fawcett                    \\
 
 \section*{Original Aims of the Project}
 The aim of my project is to create a compiler from a subset of OCaml to WebAssembly.
-The subset of OCaml included primitive types, functions, tuples, and datatypes as well as the important operators on those types.
+The subset of OCaml should include primitive types, functions, tuples, and datatypes as well as the important operators on those types.
 The implementation should be a full compiler including parsing, intermediate transformations, type inference, and code generation.
-The possible extension would be to expand the subset of OCaml to include features from multicore OCaml, mainly algebraic effect handlers.
+A possible extension would be to expand the subset of OCaml to include features from multicore OCaml, mainly algebraic effect handlers.
 \vspace{-1.5em}
 
 \section*{Work Completed}
@@ -123,17 +123,17 @@ Finally we'll explain what has been built to address the problems that have been
 
 \epigraph{“One of the notorious ones was, ‘I’d like to compare a number to a string that contains that numeral. And I don’t want to have to change my code to convert the string to a number, or the number to a string. I just want it to work. Can you please make the equals operator just say, Oh this looks like a two, and this looks like a string number two. They’re equal enough.’ And I did it. And that’s a big regret" \cite{jsorigins}}{Brendan Eich (Creator of JavaScript)}
 
-For many years, JavaScript has been the only language programmers could use writing software to run in web pages.
+For many years, JavaScript has been the only language programmers could use to writing software for the frontent of the web.
 JavaScript is quite a unique language, designed in just 10 days drawing inspiration from the functional language Scheme and the OOP language Java (and it's C origins).
 The original intentions were to make a basic language that would be ``a silly little brother"\cite{jsorigins} to Java, and it was designed much more loosely than it's ``older brother" Java, which was carefully engineered by a team of researchers at Sun Microsystems.
 
-The dynamism of JavaScript can be both a great strength and a great weakness, and has been part of the reason JavaScript is one of the most popular languages today and has expanded into back-ends with Node.js and even mobile and desktop apps with frameworks like React Native and Electron.
+The dynamism of JavaScript can be both a great strength and a great weakness. JavaScripts dynamic approach has been part of the reason its is one of the most popular languages today and has expanded into back-ends with Node.js and even mobile and desktop apps with frameworks like React Native and Electron.
 At the same time, both newcomers to JavaScript and experienced developers can be puzzled over JavaScript gems like how \mbox{\tt ('b' + 'a' + + 'a').toLowerCase()} is {\tt 'banana'}.
 JavaScript's equality operator can be especially confusing, with examples like {\tt 0 == "0"} and {\tt 0 == []}, but {\tt "0" != []}.
-The reason for this is that JavaScript's equality operator will always coerce arguments to be matching types, as referenced in the Brendan Eich quote above.
+The reason for this is that JavaScript's equality operator will always coerce arguments to be matching types, as referenced in the Brendan Eich quote above, and this breaks the expected equivalence relation.
 And for creating dynamic web content, this type of flexible equality is suitable.
 It would be quite inconvenient if a small type error in some JavaScript caused the whole webpage to crash and pop up a cryptic error message like what can happen in a Java swing application.
-The nature of the Web also makes it difficult to have a complicated verification and type checking stage at compile time since webpages can dynamically receive and interpret scripts throughout a webpages lifecycle.
+The nature of the Web also makes it difficult to have a complicated verification and type checking stage at compile time since webpages can receive and interpret scripts dynamically while the page is open.
 
 JavaScript also takes a performance hit because of it's dynamic type system.
 JavaScript has come a long way from slow interpreters to the V8 engine JIT compiling and optimising JavaScript.
@@ -146,13 +146,13 @@ Duck typing is as fun as it sounds, following the phrase ``If it walks like a du
 While typing this way gives programmers a lot more freedom and flexibility, it's a far cry from the strictness of the strong type hierarchy imposed by object oriented languages like Java.
 
 I can't talk about typing in JavaScript without mentioning TypeScript, which is a superset of JavaScript that allows programmers to add type annotations.
-Once you've written a TypeScript program, it goes through a type-checker to enforce the type rules are followed before the code is transpiled into pure JavaScript.
+Once you've written a TypeScript program, it goes through a type-checker to ensure type rules are followed before the code is transpiled into pure JavaScript.
 In the transpiling process, the code should remain mostly the same, just with type annotations removed and possibly some polyfills added.
-TypeScript does address some of the same problems my compiler aims to solve, but ultimately there are more benefits to using OCaml than just type checking, and it's still JavaScript being executed at runtime.
+TypeScript does address some of the same problems my compiler aims to solve, but ultimately it's still JavaScript being executed at runtime, and there are more benefits to using OCaml than just type checking.
 
 In conclusion, JavaScript is not a bad language.
-It was designed with a specific purpose in mind, and it is quite effective and convenient for making webpages dynamic.
-There's a lot to like about it's JavaScript's event driven design, its functional programming features, and its clean syntax which has been developed and polished over years.
+It was designed with a specific purpose in mind, and it is quite effective and convenient for making webpages more dynamic.
+There's a lot to like about JavaScript's event driven design, its functional programming features, and its clean syntax which has been developed and polished over many years.
 However, JavaScript is not suited to solving every problem, particularly large projects requiring a high level of software engineering that benefit from a rigid type system.
 
 \section{OCaml}
@@ -167,16 +167,17 @@ OCaml has a very complete type system with solid rules for basic types and power
 There aren't any big holes in the type system, as the language came out of academia and is provably sound.
 The fun surprises from JavaScript such as our {\tt 'banana'} example just don't exist for OCaml because they wouldn't be allowed by the type system.
 A good type system is one that doesn't impede the writing of the code, but catches all type errors at compile time.
-More than just not hindering programming, OCaml's type system aids programmers in documenting and reasoning about their programs without requiring many type annotations because of robust type inference.
+More than just not hindering programming, OCaml's type system aids programmers in documenting and reasoning about their programs.
+And it does so without requiring many type annotations because of robust type inference.
 
 OCaml's design decisions make it a ideal for large enterprise grade or safety critical software, both areas where JavaScript would not be a good choice.
-OCaml's expressive OOP and module systems with will documented interfaces between components as well as the safety and speed made possible by the type system fit with the needs of a well-engineered project.
+OCaml's expressive OOP and module systems with well documented interfaces between components as well as the safety and speed made possible by the type system fit with the needs of a well-engineered project.
 
 \section{WebAssembly}
 
 WebAssembly (Wasm) was created to expand what's possible on the web by allowing browsers to run a near-native instruction set \cite{wasmorg}.
-This goal includes creating a compilation target to run high level languages on the Web, and languages like C++ and Rust can already target Wasm.
-WebAssembly is similar to the effort to add the JVM to browsers in the form of Java Applets, except with a new machine language.
+This goal includes creating a compilation target to run high level languages on the web, and languages like C++ and Rust can already target Wasm.
+WebAssembly is similar to the effort to add the JVM to browsers in the form of Java Applets, except with a new virtual machine and slightly different design goals.
 It doesn't quite aim to replace JavaScript, but allows certain parts of a program to be written in a different language and take advantage of lower-level instructions and features.
 Many proposals for WebAssembly include access to GPU hardware and SIMD instructions, allowing many more types of applications to be accessed from your browser.
 Important in the design of WebAssembly is safety, since browsers can download code from anywhere, Wasm includes a verification step for type-checking and carefully sandboxes the executing code.
@@ -201,7 +202,7 @@ Finally, we will look at the software engineering practices used to minimize ris
 \section{Background}
 \subsection{WebAssembly}
 
-In the introduction, we talked about the role of WebAssembly as an alternative execution environment for web browsers to JavaScript.
+In the introduction, we talked about the role of WebAssembly as an alternative execution environment for web browsers.
 Now, we're going to dive a bit deeper into how WebAssembly works for reference in later chapters.
 At a high level, WebAssembly is a general purpose specification and binary instruction format \cite{mozillawasm}.
 The instruction set is quite low level, resembling assembly languages to take advantage of hardware and run at near native speeds.
@@ -212,46 +213,47 @@ WebAssembly runs in a sandboxed environment with security guarantees, which is h
 
 Key features of WebAssembly:
 \begin{itemize}
-   \item \textbf{Stack Machine}
+   \item \textbf{Stack Machine}:
       WebAssembly operates on a stack-based VM.
       This simplifies our implementation because we don't have to manually manage the stack.
-      It also leads to really natural code generation straight from the AST without needing an 3 Address Code (3AC) like intermediate representation.
-      This also means we don't have to worry about register allocation, which is an NP-hard problem to do so optimally.
-   \item \textbf{Types}
-      WebAssembly, like any assembly language only supports primitive integers and floats.
+      It also leads to really natural code generation straight from the AST without needing a 3 Address Code (3AC) intermediate representation.
+      This also means we don't have to worry about register allocation, which is good because optimal register allocation is an NP-hard problem.
+   \item \textbf{Types}:
+      WebAssembly, like any assembly language, only supports primitive integers and floats.
       Both 32 and 64 bit variants are available, but for simplicity our OCaml only has {\tt int}  and {\tt float} types, so we'll focus on the 32 bit variants.
       For the two supported compound types (tuples and datatypes), we'll have to design heap-allocated representations for our compiler.
-   \item \textbf{Local \& Global Variables}
+   \item \textbf{Local \& Global Variables}:
       The WebAssembly text format was designed with readability in mind, and supports named local and global variables as well as functions.
-   \item \textbf{Memory Management}
+   \item \textbf{Memory Management}:
       WebAssembly does not have any support for garbage collection.
       You can describe memory blocks with the {\tt (memory \$name size)} declaration.
       Allocation within that chunk must be done by the user, which is a major limitation of WebAssembly when compared to the JavaScript virtual machine.
       WebAssembly is still very much under development and may add support for garbage collection in the future.
       The scope of my project does not include garbage collection, so any memory needed during execution will not be re-used within the heap block.
-   \item \textbf{Indirect Calls}
+   \item \textbf{Indirect Calls}:
       WebAssembly's support for function tables with the {\tt (table \$name size)} declaration is essential for implementing function closures.
-      Without this feature, efficiently compiling functional OCaml would be impossible.
-   \item \textbf{Interop with JavaScript}
+      Without this feature, efficiently compiling first class functions would be impossible.
+   \item \textbf{Interop with JavaScript}:
       WebAssembly has both {\tt import} and {\tt export} labels allowing memory and functions to be shared between Wasm and the enclosing environment.
-      This not only gives JavaScript code an entry-point into our compiled code, but it also allows our compiled code to call JavaScript functions and pass between complex results by sharing memory.
-      The possibilities allowed by this are huge, letting us sandbox Wasm from the rest of our application while still giving it an interface to our code.
+      This not only gives JavaScript an entry-point into our compiled code, but it also allows our compiled code to call JavaScript functions and pass between complex results by sharing memory.
+      The possibilities allowed by this are huge, letting us sandbox Wasm from the rest of our application while still giving it an interface to the outside world.
 \end{itemize}
 
 \subsection{Why JavaScript}
-In my original proposal, I intended to implement the compiler in OCaml for somewhat arbitrary reasons.
-I chose OCaml as the implementation language because it matched the source language, I thought its strong yet flexible type system made it a good choice for implementing a compiler, and I wanted to gain experience with the language.
-While doing the preparation, the advantages of using JavaScript became clear and I decided to write the compiler in JS.
+In my original proposal, I intended to write the compiler in OCaml for somewhat arbitrary reasons.
+I chose OCaml as the implementation language because it matched the source language.
+I thought its strong yet expressive type system made it a good choice for implementing a compiler, and I wanted to gain experience with the language.
+While doing the preparation, however, the advantages of using JavaScript became clear and I decided to write the compiler in JS.
 
 A big reason to use JavaScript was support for JS by the WebAssembly Binary Toolkit (wabt) \cite{wabt}.
 This is the tool by which programs written in the human-readable WebAssembly Text Format ({\tt .wat} files) are validated and converted into runnable programs in the WebAssembly Binary Format ({\tt .wasm} files).
-This tool can be used both in browsers and in the Node JS environment, and can be integrated into a JavaScript implementation of the compiler.
-An OCaml version outputting {\tt .wat} would require an extra "assembly" step in order to create runnable code.
+Wabt can be used both in browsers and in the Node JS environment, and can be integrated into a JavaScript implementation of the compiler.
+An OCaml version outputting {\tt .wat} would require an extra ``assembly" step in order to create runnable code.
 Additionally, Node and web browsers are currently the only environments supporting WebAssembly, so in order to run code created by the compiler some JavaScript will be necessary.
-So, a JavaScript implementation gives us an single encapsulated program for compiling, assembling, and executing OCaml on both the back-end and in the front-end, giving a lot of versatility.
+In conclusion, a JavaScript implementation gives us a single standalone program for compiling, assembling, and executing OCaml on both the back-end and in the front-end, which is why I chose JS over OCaml.
 
 \subsection{Parser Generators}
-A parser generator takes input a grammar in some specification language and produces a program which will parse strings in the language of the grammar.
+A parser generator takes as input a grammar in some specification language and produces a program which will parse strings in the language of the grammar.
 Parser generators are an important tool for compiler designers since it would be impractical and tedious to implement shift-reduce parsers by hand for every language.
 These tools are generally used to generate shift-reduce parsers for LR grammars, which can be efficiently parsed and can represent almost all programming language constructs.
 
@@ -259,10 +261,10 @@ Parsers are specified in specialized languages depending on the parser generator
 The definitions section describes the tokens used by the grammar, and often supports regular expressions, acting as a lexer before parsing occurs.
 The rules section contains the grammar's rules, with each rule having an accompanying piece of code for processing terms reduced using the rule.
 The auxiliary function section then contains helper functions that can be called by the code in the rules section.
-In the case of a compiler, the code in the parser specification file produce a parse-tree, although other applications like a desk calculator or a simpler translator can be implemented just in the code fed into a parser generator.
+In the case of a compiler, the code in the parser specification file builds up a parse-tree, although other applications like a desk calculator or a simpler translator can be implemented just in the code fed into a parser generator.
 
 The parser generator reads this specification, computes $FIRST$ and $FOLLOW$ sets for the non-terminals, and uses those sets to generate an LALR(1) parsing table.
-The code for the reduce action for a row in the table can be filled in with the code for the rule in the specification file.
+The code for the reduce action for a row in the table can be filled in with the code for that rule in the specification file.
 Not all grammars are LALR(1) though, which will lead to shift-reduce and reduce-reduce conflicts during parser generation.
 A convenient feature of parser generators is that they allow you to say how these conflicts are resolved without having to re-write the grammar.
 Instead you can add precedence and associativity labels to grammar rules that can resolve grammar ambiguities without adding extra grammar rules.
@@ -297,12 +299,12 @@ type IntTree = Leaf | Branch of IntTree * int * IntTree \end{verbatim}
    \item
       Branching with {\tt if-then-else}. This is not strictly necessary syntax since we have {\tt match-with}, but it's useful syntactic sugar
    \item
-      Pattern matching using {\tt match-with}. This is key because it's the only way to structure tuple and variant types. Full patterns should be supported.
+      Pattern matching using {\tt match-with}. This is key because it's the only way to destruct tuple and variant types. Full patterns should be supported.
 
 \end{itemize}
 \subsection{Sample Programs}
 An important part of preparing to start development was writing a set of sample OCaml programs.
-These programs should demonstrate and exercises the functionality of the compiler.
+These programs should demonstrate and exercise the functionality of the compiler.
 Compiling and running these programs to get the correct result is part of the success criteria for the project.
 These are essentially end-to-end tests of the system.
 So here is a list of the sample programs to be implemented before starting work on the compiler:
@@ -323,6 +325,9 @@ This problem was selected because it can be solved using the common generate-and
 Another requirement of this project is benchmarking the compiler in order to evaluate what has been created, and whether it successfully allows programmers to write OCaml for the web as an alternative to JavaScript.
 This should include both end-to-end tests of the compiler on the sample programs listed above, as well as more detailed performance tests of a few programs.
 
+I also plan to use the JavaScript testing framework Mocha along with the assertion library Chai \cite{mochaorg}.
+Using these tools, I can automate testing for the project, so that running a full suite of tests is as simple as executing {\tt npm run test}.
+
 \section{Software Engineering}
 In this section, we'll talk about the engineering tools and practices used to execute this project.
 \subsection{Spiral Model}
@@ -339,10 +344,11 @@ This type of top-down approach works well when a project is routine, having well
 
 In general, the goal of a software engineering methodology is to minimize risk.
 Conventional project management wisdom says that the closer that errors are found to when they were introduced means the least risk to the project's completion.
-Conversely, the longer that an error persists, the greater the damage, with errors that make it into the release resulting in a product that either doesn't work or solves the wrong problem and wasn't what the client actually wanted.
+Conversely, the longer that an error persists, the greater the damage, with errors that make it into the release resulting in a product that either doesn't work or solves the wrong problem.
 A large disadvantage with the waterfall method is that errors in the design won't be caught until months or possibly years later when testing finally starts.
 Catching and correcting design errors, even more so than difficult coding bugs can cost months of redesign and reimplementation.
 For certain types of projects, it's very common for a client to realize that what they've asked for isn't what they really wanted only after seeing a completed product.
+Catching these requirements errors in the design phase could save months of work implementing the wrong thing.
 With the waterfall approach, where the client is only able to see the software after it's been fully implemented and tested, it's often too late or too expensive to make requirements changes.
 
 \begin{figure}[tbh]
@@ -355,17 +361,18 @@ The spiral model is an iterative approach as shown in Figure~\ref{iterativefig},
 The spiral model also entails creating prototype of the full system from each cycle, even if many components are bare-bones or have to be mocked up.
 The testing and evaluation of one iteration (or sprint) leads directly into the planning of the next iteration, allowing feedback to be taken on during development instead of after.
 This also helps to catch problems with the integration and cohesion of different components that might not be found if end-to-end tests can't be run until the end of the project.
-This is key to solving really hard problems where you're doing something that has never been done before, and it's often the case that the faster you fail, the faster you can succeed.
+This is key to solving really hard problems where you're doing something that has never been done before, and it's at the roof of the phrase ``the faster you fail, the faster you can succeed".
 One possible disadvantage of the spiral method is that some effort might be wasted on prototyping components that much be re-written for the full implementation, but ideally the benefits of testing the full system outweigh this cost.
 
 So, how does this all apply to an undergraduate dissertation undertaken by one a 1 person team?
-Writing a compiler is a well-studied and understood task, with requirements documented by the project proposal that shouldn't change, which might lend itself to the waterfall method.
+Writing a compiler is a well-studied and understood task, with requirements documented by the project proposal that shouldn't change.
+This description might lend itself to the waterfall method.
 At the same time, the interactions between the components of a compiler can be complicated, with changes to the parser output greatly effecting code generator and vice versa.
-The proposal is also specifying more like 1.5 projects, with the optional extension as an iterative addition to a finished base project.
-The hard submission deadline with harsh penalties for being late also drove me away from a waterfall approach where errors found at the end of the project causing large delays are not acceptable.
-So it made sense to me to use the spiral approach or creating a full compiler every few weeks with larger and larger subsets of OCaml until the base project and possibly extensions were finished.
+The proposal also specifies more like 1.5 projects, with the optional extension as an iterative addition to a finished base project.
+The hard submission deadline with harsh penalties for being late also drove me away from a waterfall approach where errors found at the end of the project could cause large delays, which are not acceptable.
+So it made sense to me to use the spiral approach and create a full compiler every few weeks with larger and larger subsets of OCaml until the base project and possibly extensions were finished.
 Having a prototype of the compiler would also allow me to get better feedback from my supervisor with full demonstrations of progress.
-Some effort was wasted prototyping components that would later be fully rewritten, but these the lessons learned from these prototypes were invaluable in writing the full compiler.
+Some effort was wasted prototyping components that would later be fully rewritten, but the lessons learned from these prototypes were invaluable in writing the full compiler.
 
 \subsection{Test Driven Development}
 Test Driven Development (TDD) describes a broad set of practices with the common element that tests are written before what they're testing has been implemented.
@@ -374,7 +381,7 @@ So, what are the benefits of writing tests first?
 For a 1 person project like mine, writing your own tests can leave large blind spots.
 If I've just spent days implementing some functionality, I can hardly test my implementation as if it's a black-box and edge cases missed in the implementation will likely be missed by the tests as well.
 Writing tests is also in a sense part of the design process, forcing the programmer to consider the requirements of a component before they start coding.
-Another benefit of having tests before you start coding is that you know you've finished once the tests all pass, and any extra work or refactoring is optional.
+Another benefit of having tests before you start coding is that you know you've finished once the tests all pass, any extra work or refactoring is optional.
 There's also the obvious benefit that you end up with lots of tests that are not just an afterthought, but can play an active part in the development process.
 
 For these reasons, I started my project by writing the sample OCaml programs described above, adding tests for the expected output, and setting up automated end-to-end testing using the JavaScript test framework Mocha \cite{mochaorg}.
@@ -405,12 +412,12 @@ At the start of an iterator (or a milestone from the project proposal), the To D
 Then on a given day spent working on the project, I would select a number of tasks proportional to the time I have to work and move them to the Today column.
 If there was something blocking my progress, such as waiting for an answer to a question from my supervisor or another task needing to be completed first, that sticky note would be moved to the Blocked column.
 Finally, completed tasks are moved to the done column.
-Some of the organizational benefits of using kanban were lost because I'm not working on a team and the scope of the project was probably manageable without this tool, but it still served a purpose for my personal organization and juggling completing several tasks in parallel.
+Some of the organizational benefits of using kanban were lost because I'm not working on a team and the scope of the project was probably manageable without this tool.
+Still my kanban board served a purpose for my personal organization and juggling completing several tasks in parallel.
 
 \subsection{Source Control / Backup}
-Git was used for both source control with Github as a remote host and backup solution.
-Backup was important for this project in the unlikely case that something happens to the files on my local machine, I won't lose all progress.
-The project is publicly hosted on github and can be downloaded in the case of disaster.
+Git was used for both source control and backup with Github as a remote host for my repository.
+Backup was important for this project so that in the unlikely case that something happens to the files on my local machine, I won't lose all progress.
 Git was a necessary tool on this project for tracking changes to the source code and organizing those changes in to meaningful commits.
 Commits then become the tangible unit for thinking about progress on the project allowing us to checkout a commit to see a snapshot of the project at a certain point, remove a commit from the history to undo a set of errant changes, or organize the project into branches of related work to be developed in parallel.
 The collaborative benefits of Git and Github weren't realized by this work on the project, but could be used in future efforts to improve the compiler.
@@ -449,21 +456,21 @@ The collaborative benefits of Git and Github weren't realized by this work on th
 \end{figure}
 
 \subsection*{{\tt docs/}}
-The {\tt docs/} directory contains important documents for the project including this dissertation.
+The {\tt docs/} directory contains important documents for the project, including this dissertation.
 
 \subsection*{{\tt learn/}}
-The {\tt learn/} directory contains code that I experimented with related to the project, but aren't a part of the source.
-For example, to get familiar with WebAssembly, I implemented conway's game of life, and that code lives in the learn directory.
+The {\tt learn/} directory contains code that I experimented with related to the project, but didn't become a part of the source.
+For example, to get familiar with WebAssembly, I implemented Conway's game of life, and that code lives in the learn directory.
 
 \subsection*{{\tt src/}}
 The {\tt src/} directory contains all the code for the compiler.
-{\tt main.js} is the entrypoint to the code, exporting a function {\tt compileAndRun(src)} which returns the result of compiling and executing (in Wasm) an OCaml program.
+{\tt main.js} is the entrypoint connecting the various components. Main exports a function {\tt compileAndRun(src)} which returns the result of compiling and executing (in Wasm) an OCaml program.
 {\tt logger.js} exports a logging function used by all the other files, which can be modified to reduce the amount of debug statements flooding stdout.
 The rest of the files and how they relate to eachother is shown in Figure~\ref{pipeline}.
 
 \subsection*{{\tt test/}}
 The {\tt test/} directory contains the code for evaluating the compiler.
-There are to toplevel files scripts for evaluation: {\tt samples.test.js} which runs end-to-end tests on the 12 sample programs and {\tt run-experiments.js} which takes performance measurements on the 9 performance tests.
+There are two toplevel files scripts for evaluation: {\tt samples.test.js} which runs end-to-end tests on the 12 sample programs and {\tt run-experiments.js} which takes performance measurements on the 9 performance tests.
 {\tt samples/} contains the 12 OCaml programs as inputs to the compiler for the end-to-end tests.
 There are 3 directories each containing 3 programs for the performance tests: iterative Fibonacci, recursive Fibonacci, and quicksort.
 {\tt ocaml/} contains the OCaml versions to be compiled by my compiler.
@@ -474,7 +481,7 @@ Code in this directory was not included in the line count because it was about 6
 \section{Parsing}
 For parsing, I've used the powerful Jison port of the parser generator Bison.
 This means all the information for parsing is in the {\tt ocaml.jison} file and {\tt parser.js} is just an interface that works with Jison.
-I could have used Jison to generate JavaScript source files for a parser, but to allow quick changes to the parser for ease of development, a parser object is generated by Jison each run of the parser.
+I could have used Jison to generate JavaScript source files for a parser, but to allow quick changes to the parser for ease of development, a parser object is generated by Jison each run of the compiler.
 For a full release though, it would be simple to generate a parser once, and just include that parser in the source of the project.
 
 \subsection{Lexing}
@@ -565,8 +572,8 @@ if check-1-for-pattern1 and check-2-for-pattern1 and...
 
 \subsection{Let Translation}
 Instead of having multiple ways to declare variables, I chose to carry only variables defined in functions forward into the back-end of the compiler.
-This translation is based on the observation that {\tt let x = 2 + 2 in x * x} can be rewritten as {\tt (fun x -> x * x) (2 + 2)}
-Let also gives us some extra syntax for defining functions and functions with multiple parameters.
+This translation is based on the observation that {\tt let x = 2 + 2 in x * x} can be rewritten as {\tt (fun x -> x * x) (2 + 2)}.
+{\tt Let} also gives us some syntactic sugar for defining functions with multiple parameters.
 But this can also be translated into function application with {\tt let f x y = x + y in f 2 3} being translated (slightly tediously) into {\tt (f => f 2 3) (fun f -> fun x -> fun y -> x + y)}.
 So translating let expressions into function applications, is quite straightforward and only requires some re-arranging and explicit currying for function declarations.
 
@@ -581,7 +588,7 @@ The 3 phases of the type inference algorithm are as follows: annotate, constrain
 Annotation is the simplest phase, whose role is to give every node in the AST a type-variable which will later be replaced by a concrete type.
 This is almost as trivial as traversing the AST object and adding a {\tt "type"} property with a uniquely generated type-variable to each node.
 The only complication is that instances of the same identifier should have the same type-variable.
-To accomplish this, we keep track of an environment, and every time a new identifier is declared, a new type-variable is generated and added to the environment attached to the new variable.
+To accomplish this, we keep track of an environment, and every time a new identifier is declared, a new type-variable is generated and added to the environment.
 Then when an we are annotating an identifier, we look-up it's type-variable in the environment.
 If the identifier is not found, then we report an error because this identifier has not been declared.
 \subsection{Constrain}
@@ -614,7 +621,7 @@ Substituting a solution map into a type is also as simple as traversing the type
 
 \subsection{Polymorphism}
 The above algorithm is already nearly equipped to handle polymorphic types.
-If there a type cannot be constrained to a concrete type, the algorithm will end up with type variables which for the polymorphic types.
+If there a type cannot be constrained to a concrete type, the algorithm will end up with type variables for the polymorphic types.
 However, significant work would have to be done on the code generation side to accommodate polymorphism.
 For that reason, our subset of OCaml does not support polymorphism.
 
@@ -624,18 +631,18 @@ For these constructs, there are two special types {\tt 'COMP'}, which unifies wi
 Some care must be taken in the constraint-solving phase that a type should take on the most specific type which we have found for it.
 
 \section{Code Generation}
-Code generation is the final stage of compilation, taking transformed and typed AST and producing executable Wasm code in the {\tt .wat} format.
-Code generation all runs through one function in {\tt comp.js} conveniently also called {\tt comp}
+Code generation is the final stage of compilation, taking a transformed and typed AST and producing executable Wasm code in the {\tt .wat} format.
+Code generation all runs through one function in {\tt comp.js} conveniently also called {\tt comp()}.
 
 First, I'll describe the {\tt comp()} function's signature, and then we can dive into how it works.
 There are 3 parameters: {\tt ast}, {\tt ctx}, and {\tt depth}.
 AST is self-explanatory and ctx and depth are used to generate code for looking up variables in the context/environment.
 There are also 3 values returned from compiling an expression: {\tt code}, {\tt defs}, and {\tt localDefs}.
-{\tt code} is the code that computes the expression, {\tt defs} is a collection of function definitions needed to execute the code, and {\tt localDefs} is code for defining local variables used by the code.
+{\tt code} is the code that computes the expression, {\tt defs} is a collection of function definitions needed to execute the code, and {\tt localDefs} is code for defining local variables.
 {\tt localDefs} is returned separate from the code because local definitions must appear at the beginning of a Wasm function.
 
 Generating stack based code for the basic operations is quite trivial.
-For a {\tt '+'} expression, we recursively take the code for the left subexpression, append the code for the right subexpression, and then append the line "{\tt  i32.add}".
+For a {\tt '+'} expression, we recursively take the code for the left subexpression, append the code for the right subexpression, and then append the line ``{\tt  i32.add}".
 The two values computed by the sub-expressions will be left on the top of the stack and the add instruction will add pop the top two values and push back on their sum.
 
 Generating code for more complicated expressions requires support from additional data structures and helper functions.
@@ -652,8 +659,8 @@ Bytes on the heap can be interpreted either as {\tt i32}s or {\tt f32}s, and bec
 Besides our 3 primitive types, we have 3 heap-allocated types: functions, tuples, and datatypes.
 We'll look at tuple and datatype creation now and show how functions are implemented in the next section.
 Values of every type conveniently take up 4 bytes (1 word for our case), either as a direct value or a pointer onto the heap.
-To construct an n-tuple, we simply allocate n words on the heap, store the top n-values on the stack into our tuple, and lastly push the address of the tuple onto the stack.
-To project from a tuple, we simply load from the heap at the appropriate offset from the tuple's value.
+To construct an n-tuple, we simply allocate n words on the heap, store the top n values on the stack into our tuple, and lastly push the address of the tuple onto the stack.
+To project from a tuple, we simply load from the heap at the appropriate offset from the tuple's address.
 Datatypes are nearly a special case of tuples where the index of the constructor used is stored on the heap along with the constructor's argument.
 When a constructor is used in a pattern-match, we load the first word from the 2-tuple and compare it to the fixed index of the constructor.
 To extract the constructor's argument, we simply load the second word.
@@ -697,7 +704,7 @@ Does the compiler really work?
 How do programs compiled by my compiler compare to alternatives for writing the same program?
 In this chapter, we aim to answer these questions by first detailing the methods used to evaluate the compiler.
 Then, we will analyse the data produced by our experiments.
-Finally, we will synthesize these results to answer the question: did this project meet it's success criteria?
+Finally, we will synthesize these results to answer the question: was this project a success?
 
 \section{Evaluation Methods}
 At a high level, we will evaluate the compiler by writing OCaml programs, compiling them, and testing the  correctness and performance of the resulting WebAssembly.
@@ -749,6 +756,8 @@ Normally, it wouldn't be a problem because we could use milliseconds for both, h
 The source of the problem is that my WebAssembly compiler doesn't do any garbage collection, and additionally every function call allocates a new node on the environment list for a functions parameter.
 So, without any optimizations such as tail-call optimizations, programs processing large inputs end up filling up memory quite quickly.
 For this reason, we can't just run the tests on larger inputs to get longer times, and must deal with the low-precision millisecond timings for the \JSofOCaml tests.
+Unfortunately, both Fibonacci tests ran in less than a millisecond, so the \JSofOCaml results for those will not be shown.
+We can be pretty sure though that the \JSofOCaml would have been slower than our handwritten JS.
 
 \section{Results}
 \subsection{Iterative Fibonacci}
@@ -758,8 +767,8 @@ For this reason, we can't just run the tests on larger inputs to get longer time
 \label{fib-iter-graph}
 \end{figure}
 As we can see in Figure~\ref{fib-iter-graph}, our WebAssembly compiler computes Fibonacci numbers about twice as fast as a handwritten JavaScript implementation.
-This is a good speedup especially considering there are no optimizations done on the WebAssembly, not even tail-recursion reduction which would greatly improve performance.
-At the same time, this shouldn't be too much of a surprise considering WebAssembly is much closer to a native instruction set.
+This is a good speedup especially considering there are no optimizations done on the WebAssembly, not even tail-recursion elimination, which would greatly improve performance.
+At the same time, this shouldn't be too much of a surprise considering WebAssembly is much closer to a native machine execution.
 
 The WebAssembly runtime growth looks very linear as we should expect, with an $R^2 = 0.975$ for the line of best fit.
 The JavaScript graph is quite linear as well, except for the large jump around $n=50$.
@@ -768,13 +777,13 @@ The slowdown comes right after we try to compute $fib(49) = 4807526976$, which j
 
 So why does hitting 32-bit overflow cause a slowdown for JavaScript and not WebAssembly?
 It's not because WebAssembly uses 64 bit integers, which would be possible, except my implementation uses {\tt i32}.
-When JavaScript a Number value has overflowed, it converts that Number to a float and proceeds with floats for the rest of the program.
+When a JavaScript {\tt Number} value has overflowed, it converts that {\tt Number} to a float and proceeds with a float representation for the rest of the program.
 So, we get a slowdown after $n=50$ because from that point out JavaScript is doing slower floating point arithmetic.
 
 This JS behavior is yet another example of JavaScript's type system surprising us and coercing types while we're not looking to avoid errors.
 While in some cases automatically switching to use float representations might be very convenient and avoid bugs due to integer overflow, it can equally cause difficult to identify bugs.
 Once a Number has switched to using a float representation, using it in any arithmetic expression will coerce the other operand to be a float too and result in a float.
-This would be acceptable if floats were a subtype of integers, however there are many strange properties of floats that integers don't have.
+This would be acceptable if floats were a subtype of integers, however there are many strange properties of floats that integers don't have, which could cause bizarre difficult to reproduce errors.
 
 \subsection{Recursive Fibonacci}
 \begin{figure}[tbh]
@@ -802,7 +811,7 @@ Here, the performance of our compiled Wasm code is quite similar to the JavaScri
 While it's faster for most lists, there are some inputs where the handwritten JavaScript outperforms it.
 One reason for this may be that our OCaml implementation defines its own linked list datatype as well as operations on those lists, whereas JavaScript uses faster arrays with better optimized array functions.
 This is the largest program of the 3, so it's also possible the speed loss from not having any optimizations is greater for more complex programs.
-As we expected, \JSofOCaml is strictly slower than our handwritten JavaScript by a decent margin, although the lack of resolution makes it hard to compare.
+As we expected, \JSofOCaml is strictly slower than our handwritten JavaScript and by a decent margin, although the lack of resolution makes it hard to compare.
 
 The relatively small number of tests and the high variability makes it difficult to draw conclusions about the shapes of the curves.
 A large part of the jaggedness is inherent in the quicksort algorithm, which is only $O(n \log n)$ in the average case.
@@ -841,25 +850,26 @@ Even though the OCaml implementation of recursive Fibonacci is almost identical 
 
 \chapter{Conclusion}
 
-This project aimed to give web developer a tool for writing more efficient and less buggy code for the web.
+This project aimed to give web developers a tool for writing more efficient and less buggy code for the web.
 In order to achieve that goal, we implemented a full compiler from a subset of OCaml to WebAssembly.
-In the narrow terms of our success criteria, this project was a success and we built a working compiler for our subset of OCaml, with the added bonus that it outperforms bot handwritten JavaScript and OCaml compiled to JavaScript for at least a few test programs.
+In the narrow terms of our success criteria, this project was a success.
+We built a working compiler for our subset of OCaml, with the added bonus that it outperforms bot handwritten JavaScript and OCaml compiled to JavaScript for at least a few test programs.
 However, in the huge space of web development, this is just a drop in the bucket.
 Improving the free and open platform of the web takes constant effort by a global community of programmers.
 Every project like this one, successful or not moves the web from where it was decades ago when Brendan Eich created JavaScript in 10 days to where it is now and beyond.
 I think it is certain that we will see more and more languages with full WebAssembly compilers helping developers write robust and efficient software that wouldn't have been feasible to create in JavaScript.
 
 I learned a lot from completing this project.
-Our of the many things I would do differently if I was repeating this project, here are 3.
+Out of the many things I would do differently if I was repeating this project, here are 3.
 First, I would have used Jison from the beginning instead of trying to roll my own parser, and I would have designed my grammar to be less ambiguous from the start instead of relying on precedence annotations.
 Something else I would have done differently is I would have chosen the subset to include parametric polymorphism.
 This would have greatly increased the expressiveness of the final language and would have avoided some patchwork solutions for implementing the polymorphic equality operator and match errors.
 Thirdly, I would have worked in a more disciplined way, adhering better to the schedule and engineering practices I planned to use in my project proposal.
-In this vein, I wish I had documented my engineering process better so that I could have learned more about my tendencies and improve more as an engineer.
+In this vein, I wish I had documented my engineering process better so that I could have learned more about my work habits and improve more as an engineer.
 
 Overall, this has project has been a really good experience, and I'm satisfied with the progress I made and how I've grown from working on it.
 There's always more work to be done, especially in this case.
-From adding any number of the missing OCaml features such as polymorphism, strings, or modules to improving the compiler as it is by adding optimizations or just refactoring and documenting the current code.
+These range from adding any number of the missing OCaml features such as polymorphism, strings, or modules to improving the compiler as it is by adding optimizations or just refactoring and documenting the current code.
 Still, this project succeeded as a proof of concept and a starting point for a full compiler from OCaml to WebAssembly, bringing us a little closer to having an alternative web language whose strengths complement JavaScript's weaknesses.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
